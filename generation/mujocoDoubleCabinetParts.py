@@ -284,7 +284,7 @@ def test(k=0):
     from mujoco_py import load_model_from_xml, MjSim, MjViewer
     from mujoco_py.modder import TextureModder
 
-    l,w,h,t,left,m=sample_cabinet2()
+    l,w,h,t,left,m=sample_cabinet2(False)
     cab=build_cabinet2(l,w,h,t,left)
     # print(cab.xml)
     model = load_model_from_xml(cab.xml)
@@ -294,7 +294,7 @@ def test(k=0):
     for name in sim.model.geom_names:
         modder.rand_all(name)
 
-    set_two_door_control(sim)
+    set_two_door_control(sim, model.geom_names)
     q1s=[]
     q2s=[]
     t = 0
@@ -312,9 +312,9 @@ def test(k=0):
 
         sim.step()
         t += 1
-    # print(q1s)
-    np.save('devdata/q1_'+str(k).zfill(3), q1s)
-    np.save('devdata/q2_'+str(k).zfill(3), q2s)
+    print(q1s)
+    # np.save('devdata/q1_'+str(k).zfill(3), q1s)
+    # np.save('devdata/q2_'+str(k).zfill(3), q2s)
 
 if __name__ == '__main__':
     for i in range(40):

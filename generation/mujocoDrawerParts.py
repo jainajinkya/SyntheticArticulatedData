@@ -16,7 +16,7 @@ def get_fake_pose():
     base_angle= 0.0
     return tuple(base_xyz), base_angle
 
-def sample_drawers(mean_flag):
+def sample_drawers(mean_flag=False):
     if mean_flag:
         print('generating mean drawer')
         length = d_len.mean
