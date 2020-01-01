@@ -1,0 +1,4 @@
+test/
+MUJOCO_LOG.TXT
+generation/.idea/
+generation/__pycache__/
