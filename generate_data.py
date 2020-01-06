@@ -30,7 +30,8 @@ def main(args):
     scenegen.savedir = test_dir
 
     # generate test scenes
-    scenegen.generate_scenes(int(args.n / 5), args.obj)
+    # scenegen.generate_scenes(int(args.n / 5), args.obj)
+    scenegen.generate_scenes(int(args.n / 10), args.obj)
 
     # generate visualization for sanity
     if args.debug:
