@@ -1,11 +1,14 @@
 import argparse
 import os
 
-from generation.generator import SceneGenerator
+# from generation.generator import SceneGenerator
+from generation.generator_v2 import SceneGenerator
 from generation.inspect_data import make_animations
 
 
 def main(args):
+    print("NOTE: THIS NEEDS MUJOCO TO BE RUN IN HEADLESS MODE. MAKE SURE YOU DO `unset LD_PRELOAD` BEFORE RUNNING THIS")
+
     # initialize Generator
     scenegen = SceneGenerator(root_dir=args.dir,
                               debug_flag=args.debug,

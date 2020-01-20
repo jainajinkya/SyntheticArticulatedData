@@ -170,21 +170,20 @@ class SceneGenerator():
     def generate_scenes(self, N, objtype, write_csv=True, save_imgs=True, mean_flag=False, left_only=False,
                         cute_flag=False):
         fname = os.path.join(self.savedir, 'params.csv')
-        h5fname = os.path.join(self.savedir, 'force_data.hdf5')
+        h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
-        with open(fname, 'a') as csvfile, h5py.File(h5fname, 'a') as h5File:
-            writ = csv.writer(csvfile, delimiter=',')
+        with h5py.File(h5fname, 'a') as h5File:
             for i in tqdm(range(N)):
                 obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
                 xml = obj.xml
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
-                grp = h5File.create_group("obj_"+str(i).zfill(6))
+                grp = h5File.create_group("obj_" + str(i).zfill(6))
                 self.write_urdf(fname, xml)
                 self.scenes.append(fname)
-                self.take_images(fname, obj, writ, grp, use_force=True)
+                self.take_images(fname, obj, grp, use_force=False)
         return
 
-    def take_images(self, filename, obj, writer, h5group, use_force=False, img_idx=0, debug=False):
+    def take_images(self, filename, obj, h5group, use_force=False):
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
@@ -215,11 +214,19 @@ class SceneGenerator():
             params = get_cam_relative_params2(obj)  # if 1DoF, params is length 10. If 2DoF, params is length 20.
 
         embedding_and_params = np.concatenate((embedding, params, obj.pose, obj.rotation))
+        # object_reference_frame_in_world = np.concatenate((obj.pose, obj.rotation))
+
         # print('nqpos', n_qpos_variables)
         # print(self.img_idx, obj.pose)
         # print(embedding_and_params.shape)
         t = 0
 
+        #########################
+        IMG_WIDTH = calibrations.sim_width
+        IMG_HEIGHT = calibrations.sim_height
+        #########################
+
+        force = np.array([0., 0., 0.])
         if use_force:
             # Generating Data by applying random Cartesian forces
             sim.data.ctrl[0] = 0.
@@ -233,7 +240,9 @@ class SceneGenerator():
         qddot_vals = []
         torque_vals = []
         applied_forces = []
-        applied_at_pos = []
+        moving_frame_xpos_world = []
+        moving_frame_xpos_ref_frame = []
+        depth_imgs = torch.Tensor()
 
         while t < 4000:
             if use_force:
@@ -243,21 +252,20 @@ class SceneGenerator():
             sim.step()
 
             """ Recording data for linear regression at a different frequency than images """
-            if t % 10 == 0:
+            # if t % 10 == 0:
+            if t % 250 == 0:
+
                 q_vals.append(copy.copy(sim.data.qpos[:n_qpos_variables]))
                 qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
                 applied_forces.append(copy.copy(force))
                 x_pos = np.append(sim.data.get_body_xpos("handle_link"), sim.data.get_body_xquat("handle_link"))
-                applied_at_pos.append(copy.copy(x_pos))
-
-            if t % 250 == 0:
-
-                #########################
-                IMG_WIDTH = calibrations.sim_width
-                IMG_HEIGHT = calibrations.sim_height
-                #########################
+                moving_frame_xpos_world.append(copy.copy(x_pos))
+                joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"),
+                                                 obj.rotation)
+                moving_frame_xpos_ref_frame.append(
+                    change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos))
 
                 img, depth = sim.render(IMG_WIDTH, IMG_HEIGHT, camera_name='external_camera_0', depth=True)
                 depth = vertical_flip(depth)
@@ -275,38 +283,36 @@ class SceneGenerator():
 
                     img = vertical_flip(img)
                     img = white_bg(img)
+                    integer_depth = norm_depth * 255
+
                     imgfname = os.path.join(self.savedir, 'img' + str(self.img_idx).zfill(6) + '.png')
                     depth_imgfname = os.path.join(self.savedir, 'depth_img' + str(self.img_idx).zfill(6) + '.png')
-                    integer_depth = norm_depth * 255
                     cv2.imwrite(imgfname, img)
                     cv2.imwrite(depth_imgfname, integer_depth)
 
                 # if IMG_WIDTH != 192 or IMG_HEIGHT != 108:
                 #     depth = cv2.resize(norm_depth, (192,108))
 
-                depthfname = os.path.join(self.savedir, 'depth' + str(self.img_idx).zfill(6) + '.pt')
-                torch.save(torch.tensor(norm_depth.copy()), depthfname)
-                row = np.append(embedding_and_params, sim.data.qpos[:n_qpos_variables])
-                # print(row.shape)
-                writer.writerow(row)
+                # depthfname = os.path.join(self.savedir, 'depth' + str(self.img_idx).zfill(6) + '.pt')
+                # torch.save(torch.tensor(norm_depth.copy()), depthfname)
+
+                depth_imgs = torch.cat((depth_imgs, torch.tensor(norm_depth.copy()).float().unsqueeze_(dim=0)))
                 self.img_idx += 1
 
             t += 1
+
+        h5group.create_dataset('mujoco_scene_filename', data=filename)
+        h5group.create_dataset('embedding_and_params', data=embedding_and_params)
+        h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
+        h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
+        h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
+        h5group.create_dataset('depth_imgs', data=depth_imgs)
 
         h5group.create_dataset('q', data=np.array(q_vals))
         h5group.create_dataset('qdot', data=np.array(qdot_vals))
         h5group.create_dataset('qddot', data=np.array(qddot_vals))
         h5group.create_dataset('torques', data=np.array(torque_vals))
         h5group.create_dataset('forces', data=np.array(applied_forces))
-        h5group.create_dataset('cart_pos', data=np.array(applied_at_pos))
-        h5group.create_dataset('mj_scene', data=filename)
-        h5group.create_dataset('embedding_and_params', data=embedding_and_params)
-
-            # f_data = {'q': np.array(q_val), 'qdot': np.array(qdot_vals), 'qddot': np.array(qddot_vals),
-            #           'torques': np.array(torque_vals), 'forces': np.array(applied_forces),
-            #           'cart_pos': np.array(applied_at_pos), 'mj_scene': filename,
-            #           'embedding_and_params': embedding_and_params}
-            # pickle.dump(f_data, open(os.path.join(self.savedir, "force_data.pkl"), "wb"))
 
 # shapes and stuff
 # if 1DoF, params is length 10. If 2DoF, params is length 20.

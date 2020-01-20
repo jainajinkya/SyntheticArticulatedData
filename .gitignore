@@ -2,3 +2,5 @@ test/
 MUJOCO_LOG.TXT
 generation/.idea/
 generation/__pycache__/
+__pycache__/
+*.pyc
