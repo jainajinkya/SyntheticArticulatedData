@@ -164,11 +164,9 @@ def sample_pose_drawer():
 
 def change_frames(frame_B_wrt_A, pose_wrt_A):
     A_T_pose = tf3d.affines.compose(T=pose_wrt_A[:3],
-                                    R=tf3d.quaternions.quat2mat(
-                                        [pose_wrt_A[6], pose_wrt_A[3], pose_wrt_A[4], pose_wrt_A[5]]),
-                                    # tf3d takes quat in  wxyz
+                                    R=tf3d.quaternions.quat2mat(pose_wrt_A[3:]),  # quat in  wxyz
                                     Z=np.ones(3))
-    A_rot_mat_B = tf3d.quaternions.quat2mat([frame_B_wrt_A[6], frame_B_wrt_A[3], frame_B_wrt_A[4], frame_B_wrt_A[5]])
+    A_rot_mat_B = tf3d.quaternions.quat2mat(frame_B_wrt_A[3:])
 
     # Following as described in Craig
     B_T_A = tf3d.affines.compose(T=-A_rot_mat_B.T.dot(frame_B_wrt_A[:3]),
@@ -178,4 +176,4 @@ def change_frames(frame_B_wrt_A, pose_wrt_A):
     B_T_pose = B_T_A.dot(A_T_pose)
     trans, rot, scale, _ = tf3d.affines.decompose44(B_T_pose)
     quat = tf3d.quaternions.mat2quat(rot)
-    return np.concatenate((trans, np.array([quat[1], quat[2], quat[3], quat[0]])))  # return in xyzw
+    return np.concatenate((trans, quat))  # return quat in wxyz

@@ -235,7 +235,7 @@ def test():
     t = 0
     # sim.data.ctrl[0] = - 0.2
     sim.data.ctrl[0] = 0.
-    force = np.array([-1., 0.0, 0.])
+    force = np.array([-2., 0.0, 0.])
     torque = np.array([0., 0., 0.0])
     pt = sim.data.get_body_xpos("handle_link")
     bodyid = sim.model.body_name2id("handle_link")
@@ -248,8 +248,11 @@ def test():
         # print("Cartesian position: ", sim.data.body_xpos)
         sim.step()
         viewer.render()
-        print("Applied force: ", force)
+        # print("Applied force: ", force)
         # print("Applied force from scene: ", sim.data.xfrc_applied[bodyid, :])
+
+        if t % 250:
+            print(sim.data.get_body_xpos("handle_link"), sim.data.get_body_xquat("handle_link"))
         t += 1
 
 
