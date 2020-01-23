@@ -262,8 +262,7 @@ class SceneGenerator():
                 applied_forces.append(copy.copy(force))
                 x_pos = np.append(sim.data.get_body_xpos("handle_link"), sim.data.get_body_xquat("handle_link"))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
-                joint_frame_in_world = np.append(copy.copy(sim.data.get_body_xpos("cabinet_left_hinge"),
-                                                 obj.rotation))
+                joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"), obj.rotation)
                 moving_frame_xpos_ref_frame.append(copy.copy(
                     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
 
