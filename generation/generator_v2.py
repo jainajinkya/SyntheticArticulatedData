@@ -204,12 +204,14 @@ class SceneGenerator():
             n_qpos_variables = 1
             if obj.type == 1:
                 sim.data.ctrl[0] = 0.05
+                handle_name = 'knob'
 
             elif obj.geom[3] == 1:
                 sim.data.ctrl[0] = -0.2
 
             else:
                 sim.data.ctrl[0] = 0.2
+                handle_name = 'handle_link'
 
             params = get_cam_relative_params2(obj)  # if 1DoF, params is length 10. If 2DoF, params is length 20.
 
@@ -232,8 +234,8 @@ class SceneGenerator():
             sim.data.ctrl[0] = 0.
             force = np.array([-1., 0., 0.])
             torque = np.array([0., 0., 0.])
-            pt = sim.data.get_body_xpos("handle_link")
-            bodyid = sim.model.body_name2id("handle_link")
+            pt = sim.data.get_body_xpos(handle_name)
+            bodyid = sim.model.body_name2id(handle_name)
 
         q_vals = []
         qdot_vals = []
@@ -260,11 +262,11 @@ class SceneGenerator():
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
                 applied_forces.append(copy.copy(force))
-                x_pos = np.append(sim.data.get_body_xpos("handle_link"), sim.data.get_body_xquat("handle_link"))
+                x_pos = np.append(sim.data.get_body_xpos(handle_name), sim.data.get_body_xquat(handle_name))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
-                joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"), obj.rotation)
-                moving_frame_xpos_ref_frame.append(copy.copy(
-                    change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
+                # joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"), obj.rotation)
+                # moving_frame_xpos_ref_frame.append(copy.copy(
+                #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
 
                 img, depth = sim.render(IMG_WIDTH, IMG_HEIGHT, camera_name='external_camera_0', depth=True)
                 depth = vertical_flip(depth)
@@ -302,9 +304,9 @@ class SceneGenerator():
 
         h5group.create_dataset('mujoco_scene_filename', data=filename)
         h5group.create_dataset('embedding_and_params', data=embedding_and_params)
-        h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
+        # h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
         h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
-        h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
+        # h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
         h5group.create_dataset('depth_imgs', data=depth_imgs)
 
         h5group.create_dataset('q', data=np.array(q_vals))
