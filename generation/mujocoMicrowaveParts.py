@@ -53,8 +53,10 @@ def build_microwave(length, width, height, thicc, left, set_pose=None, set_rot=N
     base_height = thicc
 
     if set_pose is None:
-        base_xyz, base_angle = sample_pose()
-        base_quat = angle_to_quat(base_angle)
+        base_xyz, base_angle, base_angle_y = sample_pose()
+        base_quat_z = angle_to_quat(base_angle)
+        base_quat_y = angle_to_quat(base_angle_y, axis=[0., 1., 0.])
+        base_quat = tf3d.qmult(base_quat_y, base_quat_z)
     else:
         base_xyz = set_pose
         base_quat = set_rot

@@ -4,3 +4,4 @@ generation/.idea/
 generation/__pycache__/
 __pycache__/
 *.pyc
+.idea/*
