@@ -265,7 +265,7 @@ class SceneGenerator():
                 applied_forces.append(copy.copy(force))
                 x_pos = np.append(sim.data.get_body_xpos(handle_name), sim.data.get_body_xquat(handle_name))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
-                # joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"), obj.rotation)
+                joint_frame_in_world = np.append(sim.data.get_body_xpos("cabinet_left_hinge"), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(
                 #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
 
@@ -305,7 +305,7 @@ class SceneGenerator():
 
         h5group.create_dataset('mujoco_scene_filename', data=filename)
         h5group.create_dataset('embedding_and_params', data=embedding_and_params)
-        # h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
+        h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
         h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
         # h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
         h5group.create_dataset('depth_imgs', data=depth_imgs)
