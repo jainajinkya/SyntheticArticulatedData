@@ -187,7 +187,7 @@ class SceneGenerator():
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
-        # viewer=MjViewer(sim) # this fucking line has caused me so much pain.
+        # viewer=MjViewer(sim) # this fucking line has caused me (Ben) so much pain.
 
         embedding = np.append(obj.type, obj.geom.reshape(-1))
         if obj.type == 4 or obj.type == 5:
@@ -201,6 +201,7 @@ class SceneGenerator():
             n_qpos_variables = 2
 
         else:
+            handle_name = 'handle_link'
             n_qpos_variables = 1
             if obj.type == 1:
                 sim.data.ctrl[0] = 0.05
@@ -208,7 +209,7 @@ class SceneGenerator():
 
             elif obj.geom[3] == 1:
                 sim.data.ctrl[0] = -0.2
-
+                handle_name = 'handle_link'
             else:
                 sim.data.ctrl[0] = 0.2
                 handle_name = 'handle_link'
