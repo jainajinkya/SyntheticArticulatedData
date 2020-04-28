@@ -206,13 +206,10 @@ class SceneGenerator():
             if obj.type == 1:
                 sim.data.ctrl[0] = 0.05
                 handle_name = 'knob'
-
             elif obj.geom[3] == 1:
                 sim.data.ctrl[0] = -0.2
-                handle_name = 'handle_link'
             else:
                 sim.data.ctrl[0] = 0.2
-                handle_name = 'handle_link'
 
             params = get_cam_relative_params2(obj)  # if 1DoF, params is length 10. If 2DoF, params is length 20.
 
