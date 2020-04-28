@@ -159,8 +159,9 @@ def sample_pose_fridge(l, w):
 
 def sample_pose_drawer():
     xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.8]), torch.tensor([2.0, 0.5, 0.0]))).numpy()
-    angle = pyro.sample('angle', dist.Uniform(3 / 4 * 3.14, 5 / 4 * 3.14)).item()
-    return tuple(xyz), angle
+    angle_z = pyro.sample('angle', dist.Uniform(3 / 4 * 3.14, 5 / 4 * 3.14)).item()
+    angle_y = pyro.sample('angle_y', dist.Beta(0.5, 0.5)).item() * (-np.pi/2)  # Setting range to [-pi/2, 0]
+    return tuple(xyz), angle_z, angle_y
 
 
 def change_frames(frame_B_wrt_A, pose_wrt_A):
