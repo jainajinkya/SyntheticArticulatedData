@@ -8,7 +8,7 @@ import transforms3d as tf3d
 
 from SyntheticArticulatedData.generation.ArticulatedObjs import Microwave, ArticulatedObject
 from SyntheticArticulatedData.generation.utils import sample_quat, sample_pose, make_string, make_single_string, \
-    make_quat_string, get_cam_relative_params2, angle_to_quat, get_cam_params
+    make_quat_string, get_cam_relative_params2, angle_to_quat, get_cam_params, sample_pose_2
 
 d_len = dist.Uniform(10 / 2 * 0.0154, 22 / 2 * 0.0154)
 d_width = dist.Uniform(16 / 2 * 0.0154, 30 / 2 * 0.0154)
@@ -53,10 +53,12 @@ def build_microwave(length, width, height, thicc, left, set_pose=None, set_rot=N
     base_height = thicc
 
     if set_pose is None:
-        base_xyz, base_angle_z, base_angle_y = sample_pose()
-        base_quat_z = angle_to_quat(base_angle_z)
-        base_quat_y = angle_to_quat(base_angle_y, axis=[0., 1., 0.])
-        base_quat = tf3d.quaternions.qmult(base_quat_z, base_quat_y)  # Equivalent to extrinsic rotation about y then z
+        # base_xyz, base_angle_z, base_angle_y = sample_pose()
+        # base_quat_z = angle_to_quat(base_angle_z)
+        # base_quat_y = angle_to_quat(base_angle_y, axis=[0., 1., 0.])
+        # base_quat = tf3d.quaternions.qmult(base_quat_z, base_quat_y)  # Equivalent to extrinsic rotation about y then z
+        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+        base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
     else:
         base_xyz = set_pose
         base_quat = set_rot

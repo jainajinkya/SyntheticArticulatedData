@@ -134,9 +134,18 @@ def sample_quat():
 
 def sample_pose():
     xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.7]), torch.tensor([2.0, 0.5, 0.3]))).numpy()
-    angle = pyro.sample('angle', dist.Uniform(3 / 4 * 3.14, 5 / 4 * 3.14)).item()
-    angle_y = pyro.sample('angle_y', dist.Beta(0.5, 0.5)).item() * np.pi/2  # Setting range to [0, pi/2]
-    return tuple(xyz), angle, angle_y
+    angle = pyro.sample('angle', dist.Uniform(3 / 4 * 3.14, 5 / 4 * 3.14)).item()  # Sampling only wrt z-axes
+    # angle_y = pyro.sample('angle_y', dist.Beta(0.5, 0.5)).item() * np.pi/2  # Setting range to [0, pi/2]
+    return tuple(xyz), angle
+
+
+def sample_pose_2():
+    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.7]), torch.tensor([2.0, 0.5, 0.3]))).numpy()
+    angle_x = pyro.sample('angle_x', dist.Uniform(-np.pi/4, np.pi/4)).item()
+    # angle_y = pyro.sample('angle_y', dist.Beta(0.5, 0.5)).item() * np.pi/2  # Setting range to [0, pi/2]
+    angle_y = pyro.sample('angle_y', dist.Uniform(0., np.pi/2)).item()  # Setting range to [0, pi/2]
+    angle_z = pyro.sample('angle_z', dist.Uniform(3 / 4 * 3.14, 5 / 4 * 3.14)).item()
+    return tuple(xyz), angle_x, angle_y, angle_z
 
 
 def sample_pose_fridge(l, w):
