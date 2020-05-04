@@ -42,10 +42,12 @@ def build_drawer(length, width, height, thicc, left, set_pose=None, set_rot=None
     base_height = thicc
 
     if set_pose is None:
-        base_xyz, base_angle_z, base_angle_y = sample_pose_drawer()
-        base_quat_z = angle_to_quat(base_angle_z)
-        base_quat_y = angle_to_quat(base_angle_y, axis=[0., 1., 0.])
-        base_quat = tf3d.quaternions.qmult(base_quat_z, base_quat_y)  # Equivalent to extrinsic rotation about y then z
+        # base_xyz, base_angle_z, base_angle_y = sample_pose_drawer()
+        # base_quat_z = angle_to_quat(base_angle_z)
+        # base_quat_y = angle_to_quat(base_angle_y, axis=[0., 1., 0.])
+        # base_quat = tf3d.quaternions.qmult(base_quat_z, base_quat_y)  # Equivalent to extrinsic rotation about y then z
+        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_drawer_2()
+        base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
     else:
         base_xyz = tuple(set_pose)
         base_quat = tuple(set_rot)
