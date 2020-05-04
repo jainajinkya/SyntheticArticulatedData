@@ -140,7 +140,8 @@ def sample_pose():
 
 
 def sample_pose_2():
-    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.7]), torch.tensor([2.0, 0.5, 0.3]))).numpy()
+    # xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.7]), torch.tensor([2.0, 0.5, 0.3]))).numpy()
+    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.0, -0.5, -0.5]), torch.tensor([2.0, 0.5, 0.5]))).numpy()
     angle_x = pyro.sample('angle_x', dist.Uniform(-np.pi/4, np.pi/4)).item()
     # angle_y = pyro.sample('angle_y', dist.Beta(0.5, 0.5)).item() * np.pi/2  # Setting range to [0, pi/2]
     angle_y = pyro.sample('angle_y', dist.Uniform(0., np.pi/2)).item()  # Setting range to [0, pi/2]
