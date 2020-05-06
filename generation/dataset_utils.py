@@ -32,7 +32,7 @@ def subsample_dataset(file_in, sub_size, output_dir):
             sub_dataset.copy(orig_data[original_keys[id]], "obj_" + str(i).zfill(6))
         orig_data.close()
         sub_dataset.close()
-        print("Created subsampled dataset file at: {}".format(output_dir + 'complete_data.hdf5'))
+        print("Created subsampled dataset file at: {}".format(output_dir + '/complete_data.hdf5'))
 
 
 if __name__ == "__main__":
