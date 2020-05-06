@@ -21,15 +21,16 @@ def combine_datasets(filenames, output_dir):
 
 
 def subsample_dataset(file_in, sub_size, output_dir):
-    orig_data = h5py.File(file_in, 'r')
+    orig_data = h5py.File(file_in[0], 'r')
     if sub_size >= len(orig_data.keys()):
         return orig_data
     else:
         ids = np.random.choice(len(orig_data.keys()), size=sub_size)
-        sub_dataset = h5py.File(output_dir + 'complete_data.hdf5', 'w')
+        sub_dataset = h5py.File(output_dir + '/complete_data.hdf5', 'w')
         original_keys = list(orig_data.keys())
         for i, id in enumerate(ids):
             sub_dataset.copy(orig_data[original_keys[id]], "obj_" + str(i).zfill(6))
+        orig_data.close()
         sub_dataset.close()
         print("Created subsampled dataset file at: {}".format(output_dir + 'complete_data.hdf5'))
 
