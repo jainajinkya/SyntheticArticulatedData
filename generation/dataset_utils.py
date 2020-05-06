@@ -37,12 +37,12 @@ def subsample_dataset(file_in, sub_size, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Datasets utils. Available functions: combine_datasets, "
                                                  "split_datasets")
-    parser.add_argument('--i', '--input_files', type=str, nargs='+',
+    parser.add_argument('-i', '--input_files', type=str, nargs='+',
                         help='Input Dataset name(s), separated by spaces')
-    parser.add_argument('--o', '--output-dir', type=str, help='path to output dir')
-    parser.add_argument('--c', '--combine', action='store_true', default=False, help='Combine provided datasets')
-    parser.add_argument('--sub', '--subsample', action='store_true', default=False, help='Randomly subsample dataset')
-    parser.add_argument('--ns', '--sub_size', type=int, default=0, help='New size of subsampled dataset')
+    parser.add_argument('-o', '--output-dir', type=str, help='path to output dir')
+    parser.add_argument('-c', '--combine', action='store_true', default=False, help='Combine provided datasets')
+    parser.add_argument('-sub', '--subsample', action='store_true', default=False, help='Randomly subsample dataset')
+    parser.add_argument('-ns', '--sub_size', type=int, default=0, help='New size of subsampled dataset')
 
     args = parser.parse_args()
     if args.combine:
