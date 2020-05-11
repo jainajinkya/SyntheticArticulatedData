@@ -30,7 +30,7 @@ def combine_datasets(filenames, output_dir):
 
 def subsample_dataset(file_in, sub_size, output_dir):
     orig_data = h5py.File(file_in, 'r')
-    if sub_size >= len(orig_data.keys()):
+    if sub_size > len(orig_data.keys()):
         return orig_data
     else:
         ids = np.random.choice(len(orig_data.keys()), size=sub_size)
