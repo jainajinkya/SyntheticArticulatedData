@@ -29,7 +29,7 @@ def combine_datasets(filenames, output_dir):
 
 
 def subsample_dataset(file_in, sub_size, output_dir):
-    orig_data = h5py.File(file_in[0], 'r')
+    orig_data = h5py.File(file_in, 'r')
     if sub_size >= len(orig_data.keys()):
         return orig_data
     else:
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     if args.combine:
         combine_datasets(filenames=args.input_files, output_dir=args.output_dir)
     elif args.subsample:
-        subsample_dataset(file_in=args.input_files, sub_size=args.sub_size, output_dir=args.output_dir)
+        subsample_dataset(file_in=args.input_files[0], sub_size=args.sub_size, output_dir=args.output_dir)
     elif args.debug_dataset:
         debug_samples_using_ids(data_dir=args.input_files[0], obj_type=args.obj_id, sample_ids=args.sample_ids,
                                 masked=args.masked)
