@@ -43,6 +43,14 @@ def subsample_dataset(file_in, sub_size, output_dir):
         print("Created subsampled dataset file at: {}".format(output_dir + '/complete_data.hdf5'))
 
 
+def shuffle_dataset(file_in, output_dir):
+    orig_data = h5py.File(file_in, 'r')
+    n = len(orig_data.keys())
+    orig_data.close()
+    subsample_dataset(file_in, n, output_dir)
+    print("Created shuffled dataset")
+
+
 def debug_sample(filename, obj_type, savedir, img_idx=0, masked=False):
     # Load image in mujoco
     model = load_model_from_path(filename)
@@ -102,6 +110,8 @@ if __name__ == "__main__":
     parser.add_argument('-sub', '--subsample', action='store_true', default=False, help='Randomly subsample dataset')
     parser.add_argument('-ns', '--sub_size', type=int, default=0, help='New size of subsampled dataset')
 
+    parser.add_argument('--shuffle', action='store_true', default=False, help='Shuffle Dataset?')
+
     parser.add_argument('-d', '--debug-dataset', action='store_true', default=False,
                         help='Should generate images to visualize samples or not?. Input file argument corresponds '
                              'to input directory where scene files are stored.')
@@ -114,6 +124,8 @@ if __name__ == "__main__":
         combine_datasets(filenames=args.input_files, output_dir=args.output_dir)
     elif args.subsample:
         subsample_dataset(file_in=args.input_files[0], sub_size=args.sub_size, output_dir=args.output_dir)
+    elif args.shuffle:
+        shuffle_dataset(file_in=args.input_files[0], output_dir=args.output_dir)
     elif args.debug_dataset:
         debug_samples_using_ids(data_dir=args.input_files[0], obj_type=args.obj_id, sample_ids=args.sample_ids,
                                 masked=args.masked)
