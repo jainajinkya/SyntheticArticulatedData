@@ -1,44 +1,45 @@
 import numpy as np
 import pyro
 import pyro.distributions as dist
-import torch
-import transforms3d as tf3d
 
-from generation.ArticulatedObjs import ArticulatedObject
-from generation.utils import sample_quat, sample_pose, make_string, make_single_string, make_quat_string, get_cam_relative_params2, angle_to_quat, get_cam_params
+from SyntheticArticulatedData.generation.ArticulatedObjs import ArticulatedObject
+from SyntheticArticulatedData.generation.utils import sample_pose, make_string, make_single_string, make_quat_string, \
+    get_cam_relative_params2, angle_to_quat, get_cam_params
 
-d_len=dist.Uniform(0.28,0.32)
-d_width=dist.Uniform(0.3,0.7)
-d_height=dist.Uniform(0.5,0.7)
-d_thicc=dist.Uniform(0.03, 0.05)
-d_left=dist.Bernoulli(0.5)
-d_mass=dist.Uniform(5.0, 30.0)
+d_len = dist.Uniform(0.28, 0.32)
+d_width = dist.Uniform(0.3, 0.7)
+d_height = dist.Uniform(0.5, 0.7)
+d_thicc = dist.Uniform(0.03, 0.05)
+d_left = dist.Bernoulli(0.5)
+d_mass = dist.Uniform(5.0, 30.0)
+
 
 def sample_cabinet(mean_flag=False):
     if mean_flag:
-        length=d_len.mean
-        width =d_width.mean
-        height=d_height.mean
-        thickness=d_thicc.mean
-        left=d_left.mean
-        mass=d_mass.mean
+        length = d_len.mean
+        width = d_width.mean
+        height = d_height.mean
+        thickness = d_thicc.mean
+        left = d_left.mean
+        mass = d_mass.mean
     else:
-        length=pyro.sample("length", d_len).item()
-        width =pyro.sample('width', d_width).item()
-        height=pyro.sample('height', d_height).item()
-        thickness=pyro.sample('thicc', d_thicc).item()
-        left=pyro.sample('lefty', d_left).item()
-        mass=pyro.sample('mass', d_mass)
+        length = pyro.sample("length", d_len).item()
+        width = pyro.sample('width', d_width).item()
+        height = pyro.sample('height', d_height).item()
+        thickness = pyro.sample('thicc', d_thicc).item()
+        left = pyro.sample('lefty', d_left).item()
+        mass = pyro.sample('mass', d_mass)
     return length / 2, width / 2, height / 2, thickness / 2, left, mass
 
-def sample_handle(length, width, height, left):
-    HANDLE_LEN=pyro.sample('hl', dist.Uniform(0.01, 0.03)).item()
-    HANDLE_WIDTH=pyro.sample('hw', dist.Uniform(0.01, 0.03)).item()
-    HANDLE_HEIGHT=pyro.sample('hh', dist.Uniform(0.01, 0.2)).item()
 
-    HX = length/4
-    HY = pyro.sample('hy', dist.Uniform(width*2 - width/4, 2 * width - 2*HANDLE_WIDTH))
-    HZ = pyro.sample('hz', dist.Uniform(-(height - HANDLE_HEIGHT), height-HANDLE_HEIGHT))
+def sample_handle(length, width, height, left):
+    HANDLE_LEN = pyro.sample('hl', dist.Uniform(0.01, 0.03)).item()
+    HANDLE_WIDTH = pyro.sample('hw', dist.Uniform(0.01, 0.03)).item()
+    HANDLE_HEIGHT = pyro.sample('hh', dist.Uniform(0.01, 0.2)).item()
+
+    HX = length / 4
+    HY = pyro.sample('hy', dist.Uniform(width * 2 - width / 4, 2 * width - 2 * HANDLE_WIDTH))
+    HZ = pyro.sample('hz', dist.Uniform(-(height - HANDLE_HEIGHT), height - HANDLE_HEIGHT))
     if left:
         HY = HY
     else:
@@ -46,11 +47,11 @@ def sample_handle(length, width, height, left):
 
     return HX, HY, HZ, HANDLE_LEN, HANDLE_WIDTH, HANDLE_HEIGHT
 
-def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=None, mean=False):
 
-    base_length=length
-    base_width=width
-    base_height=thicc
+def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=None, mean=False):
+    base_length = length
+    base_width = width
+    base_height = thicc
 
     if not set_pose:
         base_xyz, base_angle = sample_pose()
@@ -59,54 +60,54 @@ def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=Non
         base_xyz = tuple(set_pose)
         base_quat = tuple(set_rot)
 
-    base_origin=make_string(base_xyz)
-    base_orientation=make_quat_string(base_quat)
+    base_origin = make_string(base_xyz)
+    base_orientation = make_quat_string(base_quat)
 
     base_size = make_string((base_length, base_width, base_height))
-    side_length=length
-    side_width=thicc
-    side_height=height
+    side_length = length
+    side_width = thicc
+    side_height = height
     side_size = make_string((side_length, side_width, side_height))
 
     back_size = make_string((side_width, base_width, side_height))
     top_size = base_size
     door_size = back_size
 
-    left_origin  = make_string((0, -width + thicc, height))
+    left_origin = make_string((0, -width + thicc, height))
     right_origin = make_string((0, width - thicc, height))
-    top_origin = make_string((0,0,height*2))
+    top_origin = make_string((0, 0, height * 2))
     back_origin = make_string((-base_length + thicc, 0.0, height))
 
     if left:
-        door_origin=make_string((0.0, base_width, 0.0))
-        hinge_origin=make_string((base_length, -base_width, side_height))
+        door_origin = make_string((0.0, base_width, 0.0))
+        hinge_origin = make_string((base_length, -base_width, side_height))
         params = [[base_length, -base_width, side_height], [0.0, base_width, 0.0]]
-        hinge_range=' "-2.3 0" '
+        hinge_range = ' "-2.3 0" '
     else:
-        door_origin=make_string((0.0, -base_width, 0.0))
-        hinge_origin=make_string((base_length, base_width, side_height))
+        door_origin = make_string((0.0, -base_width, 0.0))
+        hinge_origin = make_string((base_length, base_width, side_height))
         params = [[base_length, base_width, side_height], [0.0, -base_width, 0.0]]
-        hinge_range=' "0 2.3" '
+        hinge_range = ' "0 2.3" '
 
     HANDLE_X, HANDLE_Y, HANDLE_Z, HANDLE_LEN, HANDLE_WIDTH, HANDLE_HEIGHT = sample_handle(length, width, height, left)
     handle_origin = make_string((HANDLE_X, HANDLE_Y, HANDLE_Z))
     handle_size = make_string((HANDLE_LEN, HANDLE_WIDTH, HANDLE_HEIGHT))
 
     znear, zfar, fovy = get_cam_params()
-    znear_str= make_single_string(znear)
+    znear_str = make_single_string(znear)
     zfar_str = make_single_string(zfar)
     fovy_str = make_single_string(fovy)
-    geometry = np.array([length, width, height, left]) # length = 4
-    parameters = np.array(params) # shape = 1, 2, 3, length = 6
+    geometry = np.array([length, width, height, left])  # length = 4
+    parameters = np.array(params)  # shape = 1, 2, 3, length = 6
     cab = ArticulatedObject(2, geometry, parameters, '', base_xyz, base_quat)
 
     # FOR TESTING
     post_params = get_cam_relative_params2(cab)
-    axis=post_params[:3]
-    axquat=post_params[3:7]
+    axis = post_params[:3]
+    axquat = post_params[3:7]
     ax_string = make_string(tuple(axis))
     axquat_string = make_quat_string(axquat)
-    xml='''
+    xml = '''
 <mujoco model="cabinet">
     <compiler angle="radian" eulerseq='zxy' />
     <option gravity = "0 0 0" />
@@ -115,7 +116,7 @@ def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=Non
     </option>
     <statistic	extent="1.0" center="0.0 0.0 0.0"/>
     <visual>
-        <map fogstart="3" fogend="5" force="0.1" znear='''+znear_str+''' zfar='''+zfar_str+'''/>
+        <map fogstart="3" fogend="5" force="0.1" znear=''' + znear_str + ''' zfar=''' + zfar_str + '''/>
     </visual>
     <size njmax="500" nconmax="100" />
     <actuator>
@@ -133,40 +134,40 @@ def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=Non
         <material name="bg" shininess="0.03" specular="0.75" texture="wallpaper"></material>
     </asset>
     <worldbody>
-            <!--body name="obj_x_axis" pos='''+ax_string+''' quat='''+axquat_string+'''>
+            <!--body name="obj_x_axis" pos=''' + ax_string + ''' quat=''' + axquat_string + '''>
                     <geom size="0.1 0.1 0.1" type="box" material="geomHandle" name="who cares"/>
             </body-->
-            <body name="cabinet_bottom" pos=''' + base_origin + ''' quat='''+base_orientation+'''>
+            <body name="cabinet_bottom" pos=''' + base_origin + ''' quat=''' + base_orientation + '''>
                 <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-                <geom size='''+ base_size +''' type="box" material="geomObj" name="b"/>
+                <geom size=''' + base_size + ''' type="box" material="geomObj" name="b"/>
                 <body name="cabinet_left" pos=''' + left_origin + '''>
                     <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
                     <geom size=''' + side_size + ''' type="box" material="geomObj" name="c" />
                 </body>
-                <body name="cabinet_right" pos='''+right_origin+'''>
+                <body name="cabinet_right" pos=''' + right_origin + '''>
                     <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-                    <geom size='''+side_size+''' type="box" material="geomObj" name="d" />
+                    <geom size=''' + side_size + ''' type="box" material="geomObj" name="d" />
                 </body>
-                <body name="cabinet_top" pos='''+top_origin+'''>
+                <body name="cabinet_top" pos=''' + top_origin + '''>
                     <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-                    <geom size='''+top_size+''' type="box" material="geomObj" name="e"/>
+                    <geom size=''' + top_size + ''' type="box" material="geomObj" name="e"/>
                 </body>
                 <body name="cabinet_back" pos=''' + back_origin + ''' >
                     <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-                    <geom size='''+back_size+''' type="box" material="geomObj" name="f" />
+                    <geom size=''' + back_size + ''' type="box" material="geomObj" name="f" />
                 </body>
-                <body name="cabinet_left_hinge" pos='''+hinge_origin+'''>
-                    <inertial pos='''+door_origin+''' mass="1" diaginertia="1 1 1" />
-                    <joint name="bottom_left_hinge" pos="0 0 0" axis="0 0 1" limited="true" range='''+hinge_range+''' />
-                    <geom size='''+door_size+''' pos='''+door_origin+''' type="box" material="geomObj" name="g"/>
-                    <body name="handle_link" pos='''+handle_origin+'''>
+                <body name="cabinet_left_hinge" pos=''' + hinge_origin + '''>
+                    <inertial pos=''' + door_origin + ''' mass="1" diaginertia="1 1 1" />
+                    <joint name="bottom_left_hinge" pos="0 0 0" axis="0 0 1" limited="true" range=''' + hinge_range + ''' />
+                    <geom size=''' + door_size + ''' pos=''' + door_origin + ''' type="box" material="geomObj" name="g"/>
+                    <body name="handle_link" pos=''' + handle_origin + '''>
                         <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-                        <geom size='''+handle_size+''' type="box" material="geomHandle" name="h"/>
+                        <geom size=''' + handle_size + ''' type="box" material="geomHandle" name="h"/>
                     </body>
                 </body>
             </body>
         <body name="external_camera_body_0" pos="0.0 0 0.00">
-            <camera euler="-1.57 1.57 0.0" fovy='''+fovy_str+''' name="external_camera_0" pos="0.0 0 0"></camera>
+            <camera euler="-1.57 1.57 0.0" fovy=''' + fovy_str + ''' name="external_camera_0" pos="0.0 0 0"></camera>
             <inertial pos= " 0.00 0.0 0.000000 " mass="1" diaginertia="1 1 1" />
             <joint name="cam_j" pos="0.0 0 0" axis = "1 0 0" type="free" />
         </body>
@@ -176,14 +177,15 @@ def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=Non
     # geometry = np.array([length, width, height, left]) # length = 4
     # parameters = np.array(params) # shape = 1, 2, 3, length = 6
     # cab = Cabinet(0, geometry, parameters, xml, pose=base_xyz, rotation=base_angle)
-    cab.xml=xml
+    cab.xml = xml
     return cab
+
 
 def test():
     from mujoco_py import load_model_from_xml, MjSim, MjViewer
     from mujoco_py.modder import TextureModder
-    l,w,h,t,left,m=sample_cabinet(mean_flag=True)
-    cab=build_cabinet(l,w,h,t,left)
+    l, w, h, t, left, m = sample_cabinet(mean_flag=True)
+    cab = build_cabinet(l, w, h, t, left)
     # print(cab.xml)
     model = load_model_from_xml(cab.xml)
     sim = MjSim(model)
@@ -204,6 +206,7 @@ def test():
         sim.step()
         viewer.render()
         t += 1
+
 
 if __name__ == '__main__':
     for i in range(200):
