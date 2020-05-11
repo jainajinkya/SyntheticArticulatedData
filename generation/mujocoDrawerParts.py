@@ -4,8 +4,8 @@ import pyro.distributions as dist
 import torch
 import transforms3d as tf3d
 
-from generation.ArticulatedObjs import Drawer, ArticulatedObject
-from generation.utils import *
+from SyntheticArticulatedData.generation.ArticulatedObjs import Drawer, ArticulatedObject
+from SyntheticArticulatedData.generation.utils import *
 
 d_len = dist.Uniform(18 / 2 * 0.0254, 24 / 2 * 0.0254)
 d_width = dist.Uniform(12 / 2 * 0.0254, 30 / 2 * 0.0254)
