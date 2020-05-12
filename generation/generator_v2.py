@@ -200,6 +200,7 @@ class SceneGenerator():
                 xml = obj.xml
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
+                self.write_urdf(fname, xml)
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
                     print("Discarding sample!")
@@ -207,7 +208,6 @@ class SceneGenerator():
                     i += 1
                     print(list(grp.keys()))
                     pbar.update(1)
-                    self.write_urdf(fname, xml)
                     self.scenes.append(fname)
         return
 
