@@ -56,7 +56,7 @@ def should_use_image_hacky(img, bnds=2):
 def should_use_image(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
-    if n_obj < 50 or (n_obj / n_obj_big) < 0.4:  # Faction of pixels within smaller image is small
+    if n_obj < 50 or (n_obj / n_obj_big) < 0.3:  # Faction of pixels within smaller image is small
         return False
     else:
         return True
@@ -291,7 +291,8 @@ class SceneGenerator():
                 norm_depth = real_depth / 12.0
 
                 # Checking if sampled object is within the image frame or not
-                bigger_img = sim.render(2*IMG_WIDTH, 2*IMG_HEIGHT, camera_name='external_camera_0', depth=False)
+                bigger_img = sim.render(int(1.5*IMG_WIDTH), int(1.5*IMG_HEIGHT),
+                                        camera_name='external_camera_0', depth=False)
                 if not should_use_image(img, bigger_img):
                     self.img_idx -= img_counter
                     return False
