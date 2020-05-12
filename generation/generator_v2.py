@@ -56,7 +56,7 @@ def should_use_image_hacky(img, bnds=2):
 def should_use_image(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
-    if n_obj < 50 or (n_obj / n_obj_big) < 0.25:  # Faction of pixels within smaller image is small
+    if n_obj < 50 or (n_obj / n_obj_big) < 0.4:  # Faction of pixels within smaller image is small
         return False
     else:
         return True
@@ -203,11 +203,9 @@ class SceneGenerator():
                 self.write_urdf(fname, xml)
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
-                    print("Discarding sample!")
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
                     i += 1
-                    print(list(grp.keys()))
                     pbar.update(1)
                     self.scenes.append(fname)
         return
