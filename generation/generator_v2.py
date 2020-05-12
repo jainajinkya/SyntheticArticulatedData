@@ -201,6 +201,7 @@ class SceneGenerator():
                 self.scenes.append(fname)
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
+                    print("Discarding sample!")
                     i -= 1
                     del grp
                     self.scenes.pop()
@@ -269,6 +270,8 @@ class SceneGenerator():
         moving_frame_xpos_ref_frame = []
         depth_imgs = torch.Tensor()
 
+        img_counter = 0
+
         while t < 4000:
             if use_force:
                 sim.data.qfrc_applied.fill(0.)  # Have to clear previous data
@@ -279,18 +282,6 @@ class SceneGenerator():
             """ Recording data for linear regression at a different frequency than images """
             # if t % 10 == 0:
             if t % 250 == 0:
-
-                q_vals.append(copy.copy(sim.data.qpos[:n_qpos_variables]))
-                qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
-                qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
-                torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
-                applied_forces.append(copy.copy(force))
-                x_pos = np.append(sim.data.get_body_xpos(handle_name), sim.data.get_body_xquat(handle_name))
-                moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
-                joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
-                # moving_frame_xpos_ref_frame.append(copy.copy(
-                #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
-
                 img, depth = sim.render(IMG_WIDTH, IMG_HEIGHT, camera_name='external_camera_0', depth=True)
                 depth = vertical_flip(depth)
                 real_depth = buffer_to_real(depth, 12.0, 0.1)
@@ -299,6 +290,7 @@ class SceneGenerator():
                 # Checking if sampled object is within the image frame or not
                 bigger_img = sim.render(2*IMG_WIDTH, 2*IMG_HEIGHT, camera_name='external_camera_0', depth=False)
                 if not should_use_image(img, bigger_img):
+                    self.img_idx -= img_counter
                     return False
 
                 if self.masked:
@@ -326,7 +318,20 @@ class SceneGenerator():
                 # torch.save(torch.tensor(norm_depth.copy()), depthfname)
 
                 depth_imgs = torch.cat((depth_imgs, torch.tensor(norm_depth.copy()).float().unsqueeze_(dim=0)))
+
+                q_vals.append(copy.copy(sim.data.qpos[:n_qpos_variables]))
+                qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
+                qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
+                torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
+                applied_forces.append(copy.copy(force))
+                x_pos = np.append(sim.data.get_body_xpos(handle_name), sim.data.get_body_xquat(handle_name))
+                moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
+                joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
+                # moving_frame_xpos_ref_frame.append(copy.copy(
+                #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
+
                 self.img_idx += 1
+                img_counter += 1
 
             t += 1
 
