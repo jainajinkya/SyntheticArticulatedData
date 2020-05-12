@@ -56,7 +56,7 @@ def should_use_image_hacky(img, bnds=2):
 def should_use_image(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
-    if n_obj < 250 or (n_obj / n_obj_big) < 0.8:  # Faction of pixels within smaller image is small
+    if n_obj < 50 or (n_obj / n_obj_big) < 0.1:  # Faction of pixels within smaller image is small
         return False
     else:
         return True
@@ -191,21 +191,24 @@ class SceneGenerator():
         fname = os.path.join(self.savedir, 'params.csv')
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
+        i = 0
         with h5py.File(h5fname, 'a') as h5File:
-            for i in tqdm(range(N)):
+            # for i in tqdm(range(N)):
+            pbar = tqdm(total=100)
+            while i < N:
                 obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
                 xml = obj.xml
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
-                self.write_urdf(fname, xml)
-                self.scenes.append(fname)
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
                     print("Discarding sample!")
-                    i -= 1
-                    self.scenes.pop()
                 else:
+                    i += 1
                     print(list(grp.keys()))
+                    pbar.update(1)
+                    self.write_urdf(fname, xml)
+                    self.scenes.append(fname)
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
