@@ -202,6 +202,8 @@ class SceneGenerator():
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
                     i -= 1
+                    del grp
+                    self.scenes.pop()
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
