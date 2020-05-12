@@ -56,7 +56,7 @@ def should_use_image_hacky(img, bnds=2):
 def should_use_image(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
-    if n_obj < 500 or (n_obj / n_obj_big) < 0.8:  # Faction of pixels within smaller image is small
+    if n_obj < 250 or (n_obj / n_obj_big) < 0.8:  # Faction of pixels within smaller image is small
         return False
     else:
         return True
@@ -203,8 +203,9 @@ class SceneGenerator():
                 if not res:
                     print("Discarding sample!")
                     i -= 1
-                    del grp
                     self.scenes.pop()
+                else:
+                    print(list(grp.keys()))
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
@@ -271,7 +272,6 @@ class SceneGenerator():
         depth_imgs = torch.Tensor()
 
         img_counter = 0
-        use_object = True
 
         while t < 4000:
             if use_force:
@@ -292,8 +292,7 @@ class SceneGenerator():
                 bigger_img = sim.render(2*IMG_WIDTH, 2*IMG_HEIGHT, camera_name='external_camera_0', depth=False)
                 if not should_use_image(img, bigger_img):
                     self.img_idx -= img_counter
-                    use_object = False
-                    break
+                    return False
 
                 if self.masked:
                     # remove background
@@ -337,22 +336,21 @@ class SceneGenerator():
 
             t += 1
 
-        if use_object:
-            h5group.create_dataset('mujoco_scene_filename', data=filename)
-            h5group.create_dataset('embedding_and_params', data=embedding_and_params)
-            h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
-            h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
-            # h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
-            h5group.create_dataset('depth_imgs', data=depth_imgs)
+        h5group.create_dataset('mujoco_scene_filename', data=filename)
+        h5group.create_dataset('embedding_and_params', data=embedding_and_params)
+        h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
+        h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
+        # h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
+        h5group.create_dataset('depth_imgs', data=depth_imgs)
 
-            h5group.create_dataset('q', data=np.array(q_vals))
-            h5group.create_dataset('qdot', data=np.array(qdot_vals))
-            h5group.create_dataset('qddot', data=np.array(qddot_vals))
-            h5group.create_dataset('torques', data=np.array(torque_vals))
-            h5group.create_dataset('forces', data=np.array(applied_forces))
-            return True
-        else:
-            return False
+        h5group.create_dataset('q', data=np.array(q_vals))
+        h5group.create_dataset('qdot', data=np.array(qdot_vals))
+        h5group.create_dataset('qddot', data=np.array(qddot_vals))
+        h5group.create_dataset('torques', data=np.array(torque_vals))
+        h5group.create_dataset('forces', data=np.array(applied_forces))
+
+        return True
+
 
 # shapes and stuff
 # if 1DoF, params is length 10. If 2DoF, params is length 20.
