@@ -43,6 +43,25 @@ def vertical_flip(img):
     return np.flip(img, axis=0)
 
 
+def should_use_image_hacky(img, bnds=2):
+    mask = img > 0
+    img_w_bnds = cv2.rectangle(np.zeros((img.shape[0], img.shape[1]), np.uint8), (0, 0),
+                               (img.shape[1], img.shape[0]), 255, thickness=bnds) > 0
+    if np.logical_and(mask, img_w_bnds).sum() > 20:
+        return False
+    else:
+        return True
+
+
+def should_use_image(img, bigger_image):
+    n_obj = (img > 0).sum()
+    n_obj_big = (bigger_image > 0).sum()
+    if n_obj < 500 or (n_obj / n_obj_big) < 0.8:  # Faction of pixels within smaller image is small
+        return False
+    else:
+        return True
+
+
 class SceneGenerator():
     def __init__(self, root_dir='bull/test_cabinets/solo', masked=False, debug_flag=False):
         '''
@@ -180,7 +199,9 @@ class SceneGenerator():
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
                 self.write_urdf(fname, xml)
                 self.scenes.append(fname)
-                self.take_images(fname, obj, grp, use_force=False)
+                res = self.take_images(fname, obj, grp, use_force=False)
+                if not res:
+                    i -= 1
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
@@ -273,6 +294,11 @@ class SceneGenerator():
                 real_depth = buffer_to_real(depth, 12.0, 0.1)
                 norm_depth = real_depth / 12.0
 
+                # Checking if sampled object is within the image frame or not
+                bigger_img = sim.render(2*IMG_WIDTH, 2*IMG_HEIGHT, camera_name='external_camera_0', depth=False)
+                if not should_use_image(img, bigger_img):
+                    return False
+
                 if self.masked:
                     # remove background
                     mask = norm_depth > 0.99
@@ -314,6 +340,8 @@ class SceneGenerator():
         h5group.create_dataset('qddot', data=np.array(qddot_vals))
         h5group.create_dataset('torques', data=np.array(torque_vals))
         h5group.create_dataset('forces', data=np.array(applied_forces))
+
+        return True
 
 # shapes and stuff
 # if 1DoF, params is length 10. If 2DoF, params is length 20.
