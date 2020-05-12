@@ -204,6 +204,7 @@ class SceneGenerator():
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
                     print("Discarding sample!")
+                    del grp
                 else:
                     i += 1
                     print(list(grp.keys()))
