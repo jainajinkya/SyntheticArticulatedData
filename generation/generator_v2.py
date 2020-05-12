@@ -204,7 +204,7 @@ class SceneGenerator():
                 res = self.take_images(fname, obj, grp, use_force=False)
                 if not res:
                     print("Discarding sample!")
-                    del grp
+                    del h5File["obj_" + str(i).zfill(6)]
                 else:
                     i += 1
                     print(list(grp.keys()))
