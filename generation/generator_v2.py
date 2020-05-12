@@ -194,7 +194,7 @@ class SceneGenerator():
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             # for i in tqdm(range(N)):
-            pbar = tqdm(total=100)
+            pbar = tqdm(total=N)
             while i < N:
                 obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
                 xml = obj.xml

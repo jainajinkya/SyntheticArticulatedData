@@ -66,7 +66,7 @@ def debug_sample(filename, obj_type, savedir, img_idx=0, masked=False):
         # elif obj.geom[3] == 1:
         #     sim.data.ctrl[0] = -0.2
         else:
-            sim.data.ctrl[0] = 0.2
+            sim.data.ctrl[0] = -0.2
 
     t = 0
     #########################
