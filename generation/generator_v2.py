@@ -208,6 +208,8 @@ class SceneGenerator():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
+                    grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype=str)
+                    grp[:] = xml
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
@@ -339,7 +341,6 @@ class SceneGenerator():
 
             t += 1
 
-        h5group.create_dataset('mujoco_scene_filename', data=filename)
         h5group.create_dataset('embedding_and_params', data=embedding_and_params)
         h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
         h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))

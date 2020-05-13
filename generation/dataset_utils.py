@@ -12,48 +12,48 @@ from SyntheticArticulatedData.generation.generator_v2 import vertical_flip, buff
 from SyntheticArticulatedData.generation.mujocoDoubleCabinetParts import set_two_door_control
 
 
-def combine_datasets(filenames, output_dir):
+def combine_datasets(files_in, file_out):
     def change_key_id_by(key_in, delta=0):
         return "obj_" + str(int(copy.copy(key_in).replace("obj_", "")) + delta).zfill(6)
 
-    bigDataset = h5py.File(output_dir + 'complete_data.hdf5', 'w')
+    bigDataset = h5py.File(file_out, 'w')
     i = 0
-    for f in filenames:
+    for f in files_in:
         data_in = h5py.File(f, 'r')
         for k in data_in.keys():
             bigDataset.copy(data_in[k], change_key_id_by(k, i))
         i += len(data_in.keys())
         data_in.close()
     bigDataset.close()
-    print("Combined datasets in file {}".format(output_dir + 'complete_data.hdf5'))
+    print("Combined datasets in file {}".format(file_out))
 
 
-def subsample_dataset(file_in, sub_size, output_dir):
+def subsample_dataset(file_in, sub_size, file_out):
     orig_data = h5py.File(file_in, 'r')
     if sub_size > len(orig_data.keys()):
         return orig_data
     else:
         ids = np.random.choice(len(orig_data.keys()), size=sub_size)
-        sub_dataset = h5py.File(output_dir + '/complete_data.hdf5', 'w')
+        sub_dataset = h5py.File(file_out, 'w')
         original_keys = list(orig_data.keys())
         for i, id in enumerate(ids):
             sub_dataset.copy(orig_data[original_keys[id]], "obj_" + str(i).zfill(6))
         orig_data.close()
         sub_dataset.close()
-        print("Created subsampled dataset file at: {}".format(output_dir + '/complete_data.hdf5'))
+        print("Created subsampled dataset file at: {}".format(file_out))
 
 
-def shuffle_dataset(file_in, output_dir):
+def shuffle_dataset(file_in, file_out):
     orig_data = h5py.File(file_in, 'r')
     n = len(orig_data.keys())
     orig_data.close()
-    subsample_dataset(file_in, n, output_dir)
+    subsample_dataset(file_in, n, file_out)
     print("Created shuffled dataset")
 
 
-def debug_sample(filename, obj_type, savedir, img_idx=0, masked=False):
+def debug_sample(file_in, obj_type, savedir, img_idx=0, masked=False):
     # Load image in mujoco
-    model = load_model_from_path(filename)
+    model = load_model_from_path(file_in)
     sim = MjSim(model)
     modder = TextureModder(sim)
 
@@ -101,9 +101,9 @@ def debug_samples_using_ids(data_dir, obj_type, sample_ids, masked=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Datasets utils. Available functions: combine_datasets, "
                                                  "split_datasets")
-    parser.add_argument('-i', '--input_files', type=str, nargs='+',
+    parser.add_argument('-i', '--files-in', type=str, nargs='+',
                         help='Input Dataset filename(s) or directories(s), separated by spaces')
-    parser.add_argument('-o', '--output-dir', type=str, help='path to output dir')
+    parser.add_argument('-o', '--file-out', type=str, help='output file name with path')
 
     parser.add_argument('-c', '--combine', action='store_true', default=False, help='Combine provided datasets')
 
@@ -121,13 +121,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.combine:
-        combine_datasets(filenames=args.input_files, output_dir=args.output_dir)
+        combine_datasets(files_in=args.files_in, file_out=args.file_out)
     elif args.subsample:
-        subsample_dataset(file_in=args.input_files[0], sub_size=args.sub_size, output_dir=args.output_dir)
+        subsample_dataset(file_in=args.files_in[0], sub_size=args.sub_size, file_out=args.file_out)
     elif args.shuffle:
-        shuffle_dataset(file_in=args.input_files[0], output_dir=args.output_dir)
+        shuffle_dataset(file_in=args.files_in[0], file_out=args.file_out)
     elif args.debug_dataset:
-        debug_samples_using_ids(data_dir=args.input_files[0], obj_type=args.obj_id, sample_ids=args.sample_ids,
+        debug_samples_using_ids(data_dir=args.files_in[0], obj_type=args.obj_id, sample_ids=args.sample_ids,
                                 masked=args.masked)
     else:
         print("Function implemented yet: combine, subsample, debug_sample!")
