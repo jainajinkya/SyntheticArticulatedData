@@ -2,6 +2,7 @@ import numpy as np
 import trimesh
 import copy
 import argparse
+import os
 
 
 def make_mesh_watertight(file_in, file_out):
@@ -50,10 +51,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.output_mesh is None:
         for mesh_in in args.input_mesh:
-            mesh_out = mesh_in.replace('.obj', '-corrected.stl')
+            # mesh_out = mesh_in.replace('.stl', '-corrected.stl')
+            mesh_in = os.path.abspath(mesh_in)
+            mesh_out = copy.copy(mesh_in)
             make_mesh_watertight(mesh_in, mesh_out)
             print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
     else:
         for mesh_in, mesh_out in zip(args.input_mesh, args.output_mesh):
+            mesh_in = os.path.abspath(mesh_in)
+            mesh_out = os.path.abspath(mesh_out)
             make_mesh_watertight(mesh_in, mesh_out)
             print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
