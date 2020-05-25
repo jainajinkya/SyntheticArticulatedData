@@ -2,7 +2,7 @@
 DATADIR=$1
 # change .obj files to .stl:
 for filename in $DATADIR/textured_objs/*.obj; do
-  ctmconv "$filename" "${filename//.obj}.stl";
+  ctmconv "$filename" "${filename/.obj/.stl}";
 done
 
 # Correct mesh if needed
