@@ -8,7 +8,7 @@ done
 
 # Correct mesh if needed
 for filename in ${DATADIR}textured_objs/*.stl; do
-  python ${CUR_DIR}sapien_dataset/dataset_tools.py -i "$filename" --correct-mesh
+  python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "$filename" --correct-mesh
 done
 
 # Change mesh file names in the urdf
@@ -26,4 +26,4 @@ file_out=`realpath ${DATADIR}mobility_mujoco.xml`
 cd /home/ajinkya/.mujoco/ && ./mujoco200/bin/compile "${file_in}" "${file_out}"; cd "${CUR_DIR}" || return 0
 
 # Add names to mesh geometries and add actuator tags
-python ${CUR_DIR}sapien_dataset/dataset_tools.py -i "${file_in}" -o "${file_out}" -uxt
+python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "${file_in}" -o "${file_out}" -uxt
