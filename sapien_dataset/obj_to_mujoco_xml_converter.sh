@@ -1,6 +1,8 @@
 #!/bin/bash
 DATADIR=$1
 CUR_DIR=`pwd`
+OBJ_TYPE=$2
+
 # change .obj files to .stl:
 for filename in ${DATADIR}textured_objs/*.obj; do
   ctmconv "$filename" "${filename/.obj/.stl}";
@@ -25,5 +27,5 @@ file_out=`realpath ${DATADIR}mobility_mujoco.xml`
 cd /home/ajinkya/.mujoco/ && ./mujoco200/bin/compile "${file_in}" "${file_out}"; cd "${CUR_DIR}" || return 0
 
 # Add names to mesh geometries and add actuator tags
-python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "${file_in}" -o "${file_out}" -uxt
+python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "${file_in}" -o "${file_out}" -uxt --obj-type "${OBJ_TYPE}"
 echo "MUJOCO-Compatible XML file created for ${DATADIR}"

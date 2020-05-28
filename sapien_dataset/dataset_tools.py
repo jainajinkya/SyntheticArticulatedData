@@ -46,7 +46,7 @@ def make_mesh_watertight_obj(file_in, file_out):
         raise TypeError("Will need to use externally generated .stl file for this")
 
 
-def copy_mesh_name_tags(urdf_file, xml_file):
+def copy_mesh_name_tags(urdf_file, xml_file, obj_type='microwave'):
     # Load xml tree of both files
     urdf_tree = ET.parse(urdf_file)
     urdf_root = urdf_tree.getroot()
@@ -54,17 +54,26 @@ def copy_mesh_name_tags(urdf_file, xml_file):
     xml_tree = ET.parse(xml_file)
     xml_root = xml_tree.getroot()
 
+    # More elegnat solution load from json provided in the dataset
+    geom_names = []
+    if obj_type == 'microwave':
+        geom_names = ['body', 'frame', 'door', 'glass', 'handle', 'tray']
+
     # find the name in the urdf file
     visElemList = {}
     for vis in urdf_root.iter("visual"):
-        visElemList[
-            vis.find('geometry').find('mesh').attrib['filename'].replace('textured_objs/', '').replace('.stl', '')] = \
-        vis.attrib['name']
+        m_name = vis.find('geometry').find('mesh').attrib['filename'].replace('textured_objs/', '').replace('.stl', '')
+        text_name = vis.attrib['name']
+
+        if np.size(np.where([x in text_name for x in geom_names])[0]) > 0:
+            text_name = geom_names[np.where([x in text_name for x in geom_names])[0][0]]
+            visElemList[m_name] = text_name
 
     # find and update the tag in the xml file
     for body in xml_root.iter('body'):
         for geom in body.findall('geom'):
-            geom.set("name", visElemList[geom.attrib['mesh']])
+            if geom.attrib['mesh'] in visElemList.keys():
+                geom.set("name", visElemList[geom.attrib['mesh']])
 
     # save new xml file
     xml_tree.write(xml_file, xml_declaration=True)
@@ -98,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output_files', type=str, nargs='+', help='onput files')
     parser.add_argument('-cm', '--correct-mesh', action='store_true', help='correct meshes')
     parser.add_argument('-uxt', '--update-xml-tags', action='store_true', help='copy geom body names in xml')
-
+    parser.add_argument('--obj-type', type=str, default='microwave', help='object category')
     args = parser.parse_args()
 
     if args.correct_mesh:
@@ -112,7 +121,7 @@ if __name__ == "__main__":
             print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
 
     elif args.update_xml_tags:
-        copy_mesh_name_tags(urdf_file=args.input_files[0], xml_file=args.output_files[0])
+        copy_mesh_name_tags(urdf_file=args.input_files[0], xml_file=args.output_files[0], obj_type=args.obj_type)
         add_actuator_tags(xml_file=args.output_files[0])
 
     else:
