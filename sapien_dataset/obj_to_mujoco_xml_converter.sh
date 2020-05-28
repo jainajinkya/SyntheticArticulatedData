@@ -16,8 +16,7 @@ cp ${DATADIR}mobility.urdf ${DATADIR}mobility_mujoco.urdf
 sed -i -e 's/.obj"/.stl"/g' ${DATADIR}mobility_mujoco.urdf
 xmlstarlet ed -L -s /robot -t elem -n mujoco -v "" -s /robot/mujoco -t elem -n compiler -v "" \
 -i /robot/mujoco/compiler -t attr -n meshdir -v textured_objs/ -i /robot/mujoco/compiler -t attr -n convexhull -v true \
--i /robot/mujoco/compiler -t attr -n balanceinertia -v true  -i /robot/mujoco/compiler -t attr -n discardvisual -v false \
-${DATADIR}mobility_mujoco.urdf
+-i /robot/mujoco/compiler -t attr -n balanceinertia -v true ${DATADIR}mobility_mujoco.urdf
 
 # Conversion to MuJoCo model
 # shellcheck disable=SC2006
@@ -27,3 +26,4 @@ cd /home/ajinkya/.mujoco/ && ./mujoco200/bin/compile "${file_in}" "${file_out}";
 
 # Add names to mesh geometries and add actuator tags
 python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "${file_in}" -o "${file_out}" -uxt
+echo "MUJOCO-Compatible XML file created for ${DATADIR}"
