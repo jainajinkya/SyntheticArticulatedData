@@ -60,7 +60,7 @@ class SceneGenerator():
         self.debugging = debug_flag
 
         self.obj_xml_file = os.path.abspath(object_xml_file)
-        self.obj_xml_tree = ET.parse(self.object_xml_file)
+        self.obj_xml_tree = ET.parse(self.obj_xml_file)
         self.obj_xml_root = self.obj_xml_tree.getroot()
         print(root_dir)
 
