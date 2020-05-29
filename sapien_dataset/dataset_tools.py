@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import trimesh
 
-# from SyntheticArticulatedData.generation.utils import get_cam_params
+from SyntheticArticulatedData.generation.utils import get_cam_params
 
 
 def make_mesh_watertight(file_in, file_out):
