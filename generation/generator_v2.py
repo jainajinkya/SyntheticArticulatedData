@@ -320,8 +320,8 @@ class SceneGenerator():
                 # if IMG_WIDTH != 192 or IMG_HEIGHT != 108:
                 #     depth = cv2.resize(norm_depth, (192,108))
 
-                # depthfname = os.path.join(self.savedir, 'depth' + str(self.img_idx).zfill(6) + '.pt')
-                # torch.save(torch.tensor(norm_depth.copy()), depthfname)
+                    depthfname = os.path.join(self.savedir, 'depth' + str(self.img_idx).zfill(6) + '.pt')
+                    torch.save(torch.tensor(norm_depth.copy()), depthfname)
 
                 depth_imgs = torch.cat((depth_imgs, torch.tensor(norm_depth.copy()).float().unsqueeze_(dim=0)))
 

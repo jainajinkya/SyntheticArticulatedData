@@ -66,7 +66,7 @@ def generate_mujoco_scene_xml(urdf_file, xml_file, obj_type='microwave'):
     xml_root = add_statistic_tag(xml_root)
     xml_root = add_global_visual_properties(xml_root, clip_range=[znear, zfar])
     xml_root = add_base_body(xml_root)
-    xml_root = add_camera(xml_root, fovy=fovy)
+    xml_root = add_camera(xml_root, name='external_camera_0', fovy=fovy)
     xml_root = add_actuator_tags(xml_root)
 
     # save new xml file
@@ -182,7 +182,7 @@ def add_base_body(xml_root, name="base", pose=[0, 0, 0], ori=[1., 0., 0., 0.]):
     return xml_root
 
 
-def add_camera(xml_root, name="external_camera_0", pose=[0., 0., 0.], ori=[1., 0., 0., 0.], fovy=85):
+def add_camera(xml_root, name="cam", pose=[0., 0., 0.], ori=[1., 0., 0., 0.], fovy=85):
     xml_root[-1].tail = "\n\t\t"
     body = ET.SubElement(xml_root.find('worldbody'), 'body')
     body.text = "\n\t\t\t"
