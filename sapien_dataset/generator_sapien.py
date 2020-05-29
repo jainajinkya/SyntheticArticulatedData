@@ -13,13 +13,6 @@ from mujoco_py import load_model_from_path, MjSim, functions
 from mujoco_py.modder import TextureModder
 from tqdm import tqdm
 
-filename = '/home/ajinkya/datasets/partnet-mobility-dataset/7119/mobility1.urdf'
-model = load_model_from_path(filename)
-sim = MjSim(model)
-modder = TextureModder(sim)
-
-""" Check if the projection is workable """
-
 
 # Load points for the object. Subsample if needed
 # Sample pose of the object. Transform point cloud to that pose
@@ -48,15 +41,6 @@ def should_use_image_hack(img, bigger_image):
     else:
         return True
 
-
-""" Generate scene """
-
-
-# Sample object pose
-# Set object at that pose in the scene
-# actuate object
-# Take image
-# Save images in the dataset
 
 class SceneGenerator():
     def __init__(self, object_xml_file, root_dir='./data/', masked=False, debug_flag=False):
