@@ -18,7 +18,7 @@ def main(args):
     os.makedirs(os.path.abspath(args.dir), exist_ok=True)
 
     # set generator's target directory for train data
-    train_dir = os.path.join(args.dir, args.obj)
+    train_dir = os.path.abspath(os.path.join(args.dir, args.obj))
     print('Generating training data in %s ' % train_dir)
     os.makedirs(train_dir, exist_ok=False)
     scenegen.savedir = train_dir
@@ -27,7 +27,7 @@ def main(args):
     scenegen.generate_scenes(args.n, args.obj)
 
     # set generator's target directory for test data
-    test_dir = os.path.join(args.dir, args.obj + '-test')
+    test_dir = os.path.abspath(os.path.join(args.dir, args.obj + '-test'))
     os.makedirs(test_dir, exist_ok=False)
     print('Generating test data in %s ' % test_dir)
     scenegen.savedir = test_dir

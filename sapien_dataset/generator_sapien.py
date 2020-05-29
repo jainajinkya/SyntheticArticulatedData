@@ -53,7 +53,7 @@ class SceneGenerator():
             - masked: should the background of depth images be 0s or 1s?
         '''
         self.scenes = []
-        self.savedir = os.path.abspath(root_dir)
+        self.savedir = root_dir
         self.masked = masked
         self.img_idx = 0
         self.depth_data = []
@@ -76,7 +76,6 @@ class SceneGenerator():
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
-            import pdb; pdb.set_trace()
             while i < N:
                 obj = copy.copy(self.obj_xml_tree)
                 root = obj.getroot()
@@ -108,6 +107,9 @@ class SceneGenerator():
         return
 
     def take_images(self, filename, obj_type, h5group, use_force=False):
+        import pdb;
+        pdb.set_trace()
+
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
