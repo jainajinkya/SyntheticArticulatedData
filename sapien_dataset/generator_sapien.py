@@ -53,7 +53,7 @@ class SceneGenerator():
             - masked: should the background of depth images be 0s or 1s?
         '''
         self.scenes = []
-        self.savedir = root_dir
+        self.savedir = os.path.abspath(root_dir)
         self.masked = masked
         self.img_idx = 0
         self.depth_data = []
