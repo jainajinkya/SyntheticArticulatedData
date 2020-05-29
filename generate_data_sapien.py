@@ -46,7 +46,7 @@ parser.add_argument('--n', type=int, default=int(1),
                     help='number of examples to generate')
 parser.add_argument('--dir', type=str, default='../microtrain/')
 parser.add_argument('--obj', type=str, default='microwave')
-parser.add_argument('--obj_xml_file', type=str, help='path to object xml file')
+parser.add_argument('--obj-xml-file', type=str, help='path to object xml file')
 parser.add_argument('--masked', action='store_true', default=False, help='remove background of depth images?')
 parser.add_argument('--debug', action='store_true', default=False)
 main(parser.parse_args())
