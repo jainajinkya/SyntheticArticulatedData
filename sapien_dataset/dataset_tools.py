@@ -54,10 +54,7 @@ def generate_mujoco_scene_xml(urdf_file, xml_file, obj_type='microwave'):
     xml_tree = ET.parse(xml_file)
     xml_root = xml_tree.getroot()
 
-    try:
-        znear, zfar, fovy = get_cam_params()
-    except:
-        znear, zfar, fovy = 0.1, 12., 85
+    znear, zfar, fovy = get_cam_params()  # Calibration parameters
 
     xml_root = copy_mesh_name_tags(urdf_root, xml_root, obj_type)
     xml_root = update_complier_tag(xml_root)
