@@ -193,7 +193,7 @@ def add_camera(xml_root, name="cam", pose=[0., 0., 0.], ori=[1., 0., 0., 0.], fo
     cam.set('name', name)
     cam.set('pos', "0. 0. 0.")
     cam.tail = "\n\t\t\t"
-    iner = ET.SubElement(body, 'inertia')
+    iner = ET.SubElement(body, 'inertial')
     iner.set('pos', '0.0 0.0 0.0')
     iner.set('mass', '1')
     iner.set('diaginertia', '1 1 1')
