@@ -72,6 +72,7 @@ class SceneGenerator():
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
+            import pdb; pdb.set_trace()
             while i < N:
                 obj = copy.copy(self.obj_xml_tree)
                 root = obj.getroot()
@@ -81,7 +82,9 @@ class SceneGenerator():
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
 
                 # Update object pose
-                base = root.find('base')
+                for body in root.find('worldbody').findall('body'):
+                    if body.attrib['name'] == 'base':
+                        base = body
                 base.set('pos', '{} {} {}'.format(base_xyz[0], base_xyz[1], base_xyz[2]))
                 base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
