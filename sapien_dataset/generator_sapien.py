@@ -59,11 +59,15 @@ class SceneGenerator():
         self.depth_data = []
         self.debugging = debug_flag
 
-        self.obj_xml_tree = ET.parse(object_xml_file)
+        self.obj_xml_file = os.path.abspath(object_xml_file)
+        self.obj_xml_tree = ET.parse(self.object_xml_file)
         self.obj_xml_root = self.obj_xml_tree.getroot()
         print(root_dir)
 
     def save_scene_file(self, xml_tree_object, fname):
+        mesh_file_path = os.path.dirname(self.obj_xml_file) + '/textured_objs/'
+        root = xml_tree_object.getroot()
+        root.find('compiler').set('meshdir', mesh_file_path)
         xml_tree_object.write(fname, xml_declaration=True)
 
     def generate_scenes(self, N, obj_type):
