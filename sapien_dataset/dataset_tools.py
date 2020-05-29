@@ -2,10 +2,10 @@ import argparse
 import copy
 import os
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
-
 import numpy as np
 import trimesh
+
+# from SyntheticArticulatedData.generation.utils import get_cam_params
 
 
 def make_mesh_watertight(file_in, file_out):
@@ -46,7 +46,7 @@ def make_mesh_watertight_obj(file_in, file_out):
         raise TypeError("Will need to use externally generated .stl file for this")
 
 
-def copy_mesh_name_tags(urdf_file, xml_file, obj_type='microwave'):
+def generate_mujoco_scene_xml(urdf_file, xml_file, obj_type='microwave'):
     # Load xml tree of both files
     urdf_tree = ET.parse(urdf_file)
     urdf_root = urdf_tree.getroot()
@@ -54,7 +54,27 @@ def copy_mesh_name_tags(urdf_file, xml_file, obj_type='microwave'):
     xml_tree = ET.parse(xml_file)
     xml_root = xml_tree.getroot()
 
-    # More elegnat solution load from json provided in the dataset
+    try:
+        znear, zfar, fovy = get_cam_params()
+    except:
+        znear, zfar, fovy = 0.1, 12., 85
+
+    xml_root = copy_mesh_name_tags(urdf_root, xml_root, obj_type)
+    xml_root = update_complier_tag(xml_root)
+    xml_root = add_gravity_tag(xml_root, val=[0., 0., 0.])
+    xml_root = add_contact_tag(xml_root)
+    xml_root = add_statistic_tag(xml_root)
+    xml_root = add_global_visual_properties(xml_root, clip_range=[znear, zfar])
+    xml_root = add_base_body(xml_root)
+    xml_root = add_camera(xml_root, fovy=fovy)
+    xml_root = add_actuator_tags(xml_root)
+
+    # save new xml file
+    xml_tree.write(xml_file, xml_declaration=True)
+
+
+def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
+    # More elegant solution would be to load from json provided in the dataset
     geom_names = []
     if obj_type == 'microwave':
         geom_names = ['body', 'frame', 'door', 'glass', 'handle', 'tray']
@@ -75,14 +95,10 @@ def copy_mesh_name_tags(urdf_file, xml_file, obj_type='microwave'):
             if geom.attrib['mesh'] in visElemList.keys():
                 geom.set("name", visElemList[geom.attrib['mesh']])
 
-    # save new xml file
-    xml_tree.write(xml_file, xml_declaration=True)
+    return xml_root
 
 
-def add_actuator_tags(xml_file):
-    xml_tree = ET.parse(xml_file)
-    xml_root = xml_tree.getroot()
-
+def add_actuator_tags(xml_root):
     for i, jnt in enumerate(xml_root.iter("joint")):
         xml_root[-1].tail = "\n\t"
 
@@ -98,7 +114,101 @@ def add_actuator_tags(xml_file):
         act.text = "\n\t\t"
         vel.tail = "\n\t"
 
-    xml_tree.write(xml_file, xml_declaration=True)
+    return xml_root
+
+
+def update_complier_tag(xml_root):
+    c_tag = xml_root.find('compiler')
+    c_tag.set('eulerseq', 'xyz')
+    return xml_root
+
+
+def add_gravity_tag(xml_root, val):
+    xml_root[-1].tail = "\n\t"
+    g_tag = ET.SubElement(xml_root, 'option')
+    g_tag.set('gravity', '{} {} {}'.format(val[0], val[1], val[2]))
+    return xml_root
+
+
+def add_contact_tag(xml_root):
+    xml_root[-1].tail = "\n\t"
+    o_tag = ET.SubElement(xml_root, 'option')
+    o_tag.tail = "\n"
+    o_tag.text = "\n\t\t"
+    c_tag = ET.SubElement(o_tag, 'flag')
+    c_tag.set('contact', 'disable')
+    c_tag.tail = "\n\t"
+    return xml_root
+
+
+def add_statistic_tag(xml_root, bb_center=[0., 0., 0.]):
+    xml_root[-1].tail = "\n\t"
+    s_tag = ET.SubElement(xml_root, 'statistic')
+    s_tag.set('extent', '1.0')
+    s_tag.set('center', '{} {} {}'.format(bb_center[0], bb_center[1], bb_center[2]))
+    return xml_root
+
+
+def add_global_visual_properties(xml_root, clip_range=[0.1, 12.]):
+    xml_root[-1].tail = "\n\t"
+    v_tag = ET.SubElement(xml_root, 'visual')
+    v_tag.tail = "\n"
+    v_tag.text = "\n\t\t"
+    m_tag = ET.SubElement(v_tag, 'map')
+    m_tag.set('force', '0.1')
+    m_tag.set('znear', str(clip_range[0]))
+    m_tag.set('zfar', str(clip_range[1]))
+    m_tag.tail = "\n\t"
+    return xml_root
+
+
+def add_base_body(xml_root, name="base", pose=[0, 0, 0], ori=[1., 0., 0., 0.]):
+    xml_root[-1].tail = "\n\t\t"
+    body_base = ET.SubElement(xml_root, 'body')
+    body_base.text = "\n\t\t"
+    body_base.set('name', name)
+    body_base.set('pos', '{} {} {}'.format(pose[0], pose[1], pose[2]))
+    # NOTE: orientation quaternion is in wxyz format
+    body_base.set('quat', '{} {} {} {}'.format(ori[0], ori[1], ori[2], ori[3]))
+    body_base.tail = "\n\t\t"
+
+    world = xml_root.find('worldbody')
+    body_base.extend(world)
+    world.clear()
+    world.append(body_base)
+    xml_root.remove(body_base)
+    world.tail = "\n\t"
+    world.text = "\n\t\t"
+    return xml_root
+
+
+def add_camera(xml_root, name="external_camera_0", pose=[0., 0., 0.], ori=[1., 0., 0., 0.], fovy=85):
+    xml_root[-1].tail = "\n\t\t"
+    body = ET.SubElement(xml_root.find('worldbody'), 'body')
+    body.text = "\n\t\t\t"
+    body.set('name', name + '_body')
+    body.set('pos', '{} {} {}'.format(pose[0], pose[1], pose[2]))
+    body.set('quat', '{} {} {} {}'.format(ori[0], ori[1], ori[2], ori[3]))
+    body.tail = "\n\t"
+    cam = ET.SubElement(body, 'camera')
+    cam.set('euler', '-1.57 1.57 0.0')
+    cam.set('fovy', str(fovy))
+    cam.set('name', name)
+    cam.set('pos', "0. 0. 0.")
+    cam.tail = "\n\t\t\t"
+    iner = ET.SubElement(body, 'inertia')
+    iner.set('pos', '0.0 0.0 0.0')
+    iner.set('mass', '1')
+    iner.set('diaginertia', '1 1 1')
+    iner.tail = "\n\t\t\t"
+    jnt = ET.SubElement(body, 'joint')
+    jnt.set('name', name+'_jnt')
+    jnt.set('pos', '0. 0. 0.')
+    jnt.set('axis', '1 0 0')
+    jnt.set('type', 'free')
+    jnt.tail = "\n\t\t"
+    xml_root[-1].tail = "\n\t"
+    return xml_root
 
 
 if __name__ == "__main__":
@@ -121,8 +231,7 @@ if __name__ == "__main__":
             print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
 
     elif args.update_xml_tags:
-        copy_mesh_name_tags(urdf_file=args.input_files[0], xml_file=args.output_files[0], obj_type=args.obj_type)
-        add_actuator_tags(xml_file=args.output_files[0])
+        generate_mujoco_scene_xml(urdf_file=args.input_files[0], xml_file=args.output_files[0], obj_type=args.obj_type)
 
     else:
         print("Not implemented yet!")
