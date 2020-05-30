@@ -36,8 +36,9 @@ def vertical_flip(img):
 def should_use_image_hack(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
-    if n_obj < 50 or (n_obj / n_obj_big) < 0.40:  # Fraction of pixels within smaller image is small
-        return False
+    if n_obj < 50 or (n_obj / n_obj_big) < 0.25:  # Fraction of pixels within smaller image is small
+        #return False
+        return True
     else:
         return True
 
@@ -83,7 +84,7 @@ class SceneGenerator():
                 # Sample object pose
                 base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
-
+                print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
                 # Update object pose
                 for body in root.find('worldbody').findall('body'):
                     if body.attrib['name'] == 'base':
@@ -92,6 +93,7 @@ class SceneGenerator():
                 base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 self.save_scene_file(obj, fname)
+                print("Scene saved in file:{}".format(fname))
 
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
@@ -99,17 +101,15 @@ class SceneGenerator():
                 if not res:
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
+                    print("Rejected sample")
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype=str)
-                    grp[:] = ET.tostring(root, xml_declaration=True)
+                    grp.create_dataset('mujoco_scene_xml', dtype=h5py.string_dtype(encoding='ascii'), data=ET.tostring(root))
+                    #grp[:] = ET.tostring(root)
         return
 
     def take_images(self, filename, obj_type, h5group, use_force=False):
-        import pdb;
-        pdb.set_trace()
-
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
@@ -197,8 +197,8 @@ class SceneGenerator():
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
                 applied_forces.append(copy.copy(force))
-                x_pos = np.append(sim.data.get_body_xpos(handle_name), sim.data.get_body_xquat(handle_name))
-                moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
+                #x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
+                #moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(
                 #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
