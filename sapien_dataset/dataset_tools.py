@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import trimesh
 
-from SyntheticArticulatedData.generation.utils import get_cam_params
+# from SyntheticArticulatedData.generation.utils import get_cam_params
 
 
 def make_mesh_watertight(file_in, file_out):
@@ -54,8 +54,10 @@ def generate_mujoco_scene_xml(urdf_file, xml_file, obj_type='microwave'):
     xml_tree = ET.parse(xml_file)
     xml_root = xml_tree.getroot()
 
-    znear, zfar, fovy = get_cam_params()  # Calibration parameters
+    # znear, zfar, fovy = get_cam_params()  # Calibration parameters
+    znear, zfar, fovy = 0.1, 12, 85
 
+    xml_root = add_texture(xml_root)
     xml_root = copy_mesh_name_tags(urdf_root, xml_root, obj_type)
     xml_root = update_complier_tag(xml_root)
     xml_root = add_gravity_tag(xml_root, val=[0., 0., 0.])
@@ -92,25 +94,27 @@ def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
             if geom.attrib['mesh'] in visElemList.keys():
                 geom.set("name", visElemList[geom.attrib['mesh']])
 
+                if visElemList[geom.attrib['mesh']] == 'handle':
+                    geom.set("material", "geomHandle")
+
     return xml_root
 
 
 def add_actuator_tags(xml_root):
-    for i, jnt in enumerate(xml_root.iter("joint")):
-        xml_root[-1].tail = "\n\t"
+    xml_root[-1].tail = "\n\t"
+    act = ET.SubElement(xml_root, 'actuator')
+    act.tail = "\n"
+    act.text = "\n\t\t"
 
+    for i, jnt in enumerate(xml_root.iter("joint")):
         # Add actuator node as a child of root node
-        act = ET.SubElement(xml_root, 'actuator')
         vel = ET.SubElement(act, "velocity")
         vel.set('joint', jnt.attrib['name'])
         vel.set('name', 'act_' + str(i))
         vel.set('kv', '10')
+        vel.tail = "\n\t\t"
 
-        # Properly formatting
-        act.tail = "\n"
-        act.text = "\n\t\t"
-        vel.tail = "\n\t"
-
+    vel.tail = "\n\t"  # Correctly format tha last one
     return xml_root
 
 
@@ -159,10 +163,50 @@ def add_global_visual_properties(xml_root, clip_range=[0.1, 12.]):
     return xml_root
 
 
+def add_texture(xml_root):
+    asset = xml_root.find('asset')
+    asset.text = "\n\t\t"
+    asset.tail = "\n\t"
+    asset[-1].tail = "\n\t\t"
+    t1 = ET.SubElement(asset, 'texture')
+    t1.set('builtin', 'flat')
+    t1.set('name', 'objTex')
+    t1.set('height', '32')
+    t1.set('width', '32')
+    t1.set('rgb1', '1 1 1')
+    t1.set('type', 'cube')
+    t1.tail = "\n\t\t"
+    t2 = ET.SubElement(asset, 'texture')
+    t2.set('builtin', 'flat')
+    t2.set('name', 'handleTex')
+    t2.set('height', '32')
+    t2.set('width', '32')
+    t2.set('rgb1', '0.8 0.8 0.8')
+    t2.set('type', 'cube')
+    t2.tail = "\n\t\t"
+
+    m1 = ET.SubElement(asset, 'material')
+    m1.set('name', 'geomObj')
+    m1.set('shininess', '0.03')
+    m1.set('specular', '0.75')
+    m1.set('texture', 'objTex')
+    m1.tail = '\n\t\t'
+    m2 = ET.SubElement(asset, 'material')
+    m2.set('name', 'geomHandle')
+    m2.set('shininess', '0.03')
+    m2.set('specular', '0.75')
+    m2.set('texture', 'handleTex')
+    m2.tail = '\n\t'
+
+    for geom in xml_root.iter('geom'):
+        geom.set('material', 'geomObj')
+    return xml_root
+
+
 def add_base_body(xml_root, name="base", pose=[0, 0, 0], ori=[1., 0., 0., 0.]):
     xml_root[-1].tail = "\n\t\t"
     body_base = ET.SubElement(xml_root, 'body')
-    body_base.text = "\n\t\t"
+    body_base.text = "\n\t\t\t"
     body_base.set('name', name)
     body_base.set('pos', '{} {} {}'.format(pose[0], pose[1], pose[2]))
     # NOTE: orientation quaternion is in wxyz format
@@ -174,6 +218,17 @@ def add_base_body(xml_root, name="base", pose=[0, 0, 0], ori=[1., 0., 0., 0.]):
     world.clear()
     world.append(body_base)
     xml_root.remove(body_base)
+
+    # Formatting
+    for b in body_base.findall('geom'):
+        b.tail = "\n\t\t\t"
+    for b in body_base.findall('body'):
+        b.text = "\n\t\t\t\t"
+        b.tail = "\n\t\t\t"
+        for child in b:
+            child.tail = "\n\t\t\t\t"
+        child.tail = "\n\t\t\t"
+    b.tail = "\n\t\t"
     world.tail = "\n\t"
     world.text = "\n\t\t"
     return xml_root
