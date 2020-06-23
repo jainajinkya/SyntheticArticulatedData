@@ -37,7 +37,7 @@ def should_use_image_hack(img, bigger_image):
     n_obj = (img > 0).sum()
     n_obj_big = (bigger_image > 0).sum()
     if n_obj < 50 or (n_obj / n_obj_big) < 0.25:  # Fraction of pixels within smaller image is small
-        #return False
+        # return False
         return True
     else:
         return True
@@ -105,8 +105,9 @@ class SceneGenerator():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    grp.create_dataset('mujoco_scene_xml', dtype=h5py.string_dtype(encoding='ascii'), data=ET.tostring(root))
-                    #grp[:] = ET.tostring(root)
+                    grp.create_dataset('mujoco_scene_xml', dtype=h5py.string_dtype(encoding='ascii'),
+                                       data=ET.tostring(root))
+                    # grp[:] = ET.tostring(root)
         return
 
     def take_images(self, filename, obj_type, h5group, use_force=False):
@@ -197,8 +198,8 @@ class SceneGenerator():
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
                 applied_forces.append(copy.copy(force))
-                #x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
-                #moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
+                # x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
+                # moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(
                 #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
