@@ -120,7 +120,7 @@ def add_actuator_tags(xml_root):
 
 def update_complier_tag(xml_root):
     c_tag = xml_root.find('compiler')
-    c_tag.set('eulerseq', 'xyz')
+    c_tag.set('eulerseq', 'zxy')
     return xml_root
 
 
@@ -150,13 +150,15 @@ def add_statistic_tag(xml_root, bb_center=[0., 0., 0.]):
     return xml_root
 
 
-def add_global_visual_properties(xml_root, clip_range=[0.1, 12.]):
+def add_global_visual_properties(xml_root, clip_range=[0.1, 12.0]):
     xml_root[-1].tail = "\n\t"
     v_tag = ET.SubElement(xml_root, 'visual')
     v_tag.tail = "\n"
     v_tag.text = "\n\t\t"
     m_tag = ET.SubElement(v_tag, 'map')
     m_tag.set('force', '0.1')
+    m_tag.set('fogstart', '3.')
+    m_tag.set('fogend', '5.')
     m_tag.set('znear', str(clip_range[0]))
     m_tag.set('zfar', str(clip_range[1]))
     m_tag.tail = "\n\t"
