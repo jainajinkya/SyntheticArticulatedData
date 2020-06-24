@@ -83,7 +83,7 @@ class SceneGenerator():
 
                 # Sample object pose
                 base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
-                base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
+                base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')  # wxyz
                 print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
                 # Update object pose
                 for body in root.find('worldbody').findall('body'):

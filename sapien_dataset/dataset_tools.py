@@ -205,7 +205,16 @@ def add_texture(xml_root):
     return xml_root
 
 
-def add_base_body(xml_root, name="base", pose=[0, 0, 0], ori=[1., 0., 0., 0.]):
+def add_base_body(xml_root, name="base"):
+    # Set body base at link_0
+    for link in xml_root.iter('body'):
+        if link.attrib['name'] == 'link_0':
+            pose = [float(i) for i in link.attrib['pos'].split(' ')]
+            ori = [float(i) for i in link.attrib['quat'].split(' ')]
+            # Set the original values to defaults
+            link.set('pos', '0.0 0.0 0.0')
+            link.set('quat', '1.0 0.0 0.0 0.0')
+
     xml_root[-1].tail = "\n\t\t"
     body_base = ET.SubElement(xml_root, 'body')
     body_base.text = "\n\t\t\t"
