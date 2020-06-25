@@ -119,7 +119,7 @@ class SceneGenerator():
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
         handle_name = 'handle'
         n_qpos_variables = 1
-        sim.data.ctrl[0] = 0.5 + np.random.randn()   # Random variation
+        sim.data.ctrl[0] = 0.05 + 0.5 * np.random.randn()   # Random variation
 
         # obj_type = 0
         # embedding = np.append(obj_type, obj.geom.reshape(-1))
