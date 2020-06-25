@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import transforms3d as tf3d
 from SyntheticArticulatedData.generation import calibrations
-from SyntheticArticulatedData.generation.utils import sample_pose_2
+from SyntheticArticulatedData.generation.utils import sample_pose_sapien
 from mujoco_py import load_model_from_path, MjSim, functions
 from mujoco_py.modder import TextureModder
 from tqdm import tqdm
@@ -82,7 +82,7 @@ class SceneGenerator():
                 root = obj.getroot()
 
                 # Sample object pose
-                base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+                base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_sapien()
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')  # wxyz
                 print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
                 # Update object pose
