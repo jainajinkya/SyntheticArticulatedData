@@ -114,12 +114,11 @@ class SceneGenerator():
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
-        # viewer=MjViewer(sim) # this fucking line has caused me (Ben) so much pain.
 
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
         handle_name = 'handle'
         n_qpos_variables = 1
-        sim.data.ctrl[0] = 0.05 + 0.5 * np.random.randn()   # Random variation
+        sim.data.ctrl[0] = 0.1  # + 0.5 * np.random.randn()   # Random variation
 
         # obj_type = 0
         # embedding = np.append(obj_type, obj.geom.reshape(-1))
@@ -133,14 +132,14 @@ class SceneGenerator():
         IMG_HEIGHT = calibrations.sim_height
         #########################
 
-        force = np.array([0., 0., 0.])
-        if use_force:
-            # Generating Data by applying random Cartesian forces
-            sim.data.ctrl[0] = 0.
-            force = np.array([-1., 0., 0.])
-            torque = np.array([0., 0., 0.])
-            pt = sim.data.get_body_xpos(handle_name)
-            bodyid = sim.model.body_name2id(handle_name)
+        # force = np.array([0., 0., 0.])
+        # if use_force:
+        #     # Generating Data by applying random Cartesian forces
+        #     sim.data.ctrl[0] = 0.
+        #     force = np.array([-1., 0., 0.])
+        #     torque = np.array([0., 0., 0.])
+        #     pt = sim.data.get_body_xpos(handle_name)
+        #     bodyid = sim.model.body_name2id(handle_name)
 
         q_vals = []
         qdot_vals = []
@@ -155,9 +154,10 @@ class SceneGenerator():
         img_counter = 0
 
         while t < 4000:
-            if use_force:
-                sim.data.qfrc_applied.fill(0.)  # Have to clear previous data
-                functions.mj_applyFT(model, sim.data, force, torque, pt, bodyid, sim.data.qfrc_applied)
+            # if use_force:
+            #     sim.data.qfrc_applied.fill(0.)  # Have to clear previous data
+            #     functions.mj_applyFT(model, sim.data, force, torque, pt, bodyid, sim.data.qfrc_applied)
+
             sim.forward()
             sim.step()
 
@@ -197,7 +197,7 @@ class SceneGenerator():
                 qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
-                applied_forces.append(copy.copy(force))
+                # applied_forces.append(copy.copy(force))
                 # x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
                 # moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
