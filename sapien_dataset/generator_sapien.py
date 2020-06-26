@@ -116,7 +116,7 @@ class SceneGenerator():
         modder = TextureModder(sim)
 
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
-        handle_name = 'handle'
+        # handle_name = 'handle'
         n_qpos_variables = 1
         sim.data.ctrl[0] = 0.1  # + 0.5 * np.random.randn()   # Random variation
 
