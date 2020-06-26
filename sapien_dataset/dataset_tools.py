@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 
 import numpy as np
 import trimesh
+from shapely.geometry import Polygon
 
 
 # from SyntheticArticulatedData.generation.utils import get_cam_params
@@ -15,14 +16,13 @@ def make_mesh_watertight(file_in, file_out):
     bnds = np.array(mesh.bounding_box.extents)
     bad_cols = np.nonzero(bnds < 1e-6)
     if bad_cols[0].size > 0:
-        # new_vert = copy.copy(mesh.vertices)
-        # for k in bad_cols:
-        #     new_vert[:, k[0]] += np.random.uniform(low=1e-6, high=2e-6, size=len(mesh.vertices))
-        # mesh2 = trimesh.convex.convex_hull(new_vert)
-
-        mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
-                                                       mesh.faces, height=0.001)
-        mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='QbB Pp Qt Qw')
+        try: 
+            mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
+                                                           mesh.faces, height=0.001)
+            mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='QbB Pp Qt Qw')
+        except:
+            mesh2 = trimesh.creation.extrude_polygon(Polygon(np.delete(mesh.vertices, bad_cols, axis=1)), 
+                                                    height=0.001)
     else:
         mesh2 = copy.copy(mesh)
     with open(file_out, 'wb') as f:
