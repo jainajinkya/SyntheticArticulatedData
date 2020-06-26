@@ -2,8 +2,10 @@ import argparse
 import copy
 import os
 import xml.etree.ElementTree as ET
+
 import numpy as np
 import trimesh
+
 
 # from SyntheticArticulatedData.generation.utils import get_cam_params
 
@@ -11,15 +13,15 @@ import trimesh
 def make_mesh_watertight(file_in, file_out):
     mesh = trimesh.load_mesh(file_in)
     bnds = np.array(mesh.bounding_box.extents)
-    bad_cols = np.nonzero(bnds < 1e-5)
+    bad_cols = np.nonzero(bnds < 1e-6)
     if bad_cols[0].size > 0:
         # new_vert = copy.copy(mesh.vertices)
         # for k in bad_cols:
         #     new_vert[:, k[0]] += np.random.uniform(low=1e-6, high=2e-6, size=len(mesh.vertices))
         # mesh2 = trimesh.convex.convex_hull(new_vert)
 
-        mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
-                                                       mesh.faces, height=0.001)
+        mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1), mesh.faces,
+                                                       height=0.001)
         mesh2 = trimesh.convex.convex_hull(mesh2.vertices)
     else:
         mesh2 = copy.copy(mesh)
@@ -265,7 +267,7 @@ def add_camera(xml_root, name="cam", pose=[0., 0., 0.], ori=[1., 0., 0., 0.], fo
     iner.set('diaginertia', '1 1 1')
     iner.tail = "\n\t\t\t"
     jnt = ET.SubElement(body, 'joint')
-    jnt.set('name', name+'_jnt')
+    jnt.set('name', name + '_jnt')
     jnt.set('pos', '0. 0. 0.')
     jnt.set('axis', '1 0 0')
     jnt.set('type', 'free')
@@ -285,7 +287,7 @@ if __name__ == "__main__":
 
     if args.correct_mesh:
         if args.output_files is None:
-            args.output_files = copy.copy(args.input_files)   # Update input mesh file inplace
+            args.output_files = copy.copy(args.input_files)  # Update input mesh file inplace
 
         for mesh_in, mesh_out in zip(args.input_files, args.output_files):
             mesh_in = os.path.abspath(mesh_in)
