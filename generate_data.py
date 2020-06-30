@@ -36,7 +36,7 @@ def main(args):
 
     # generate test scenes
     # scenegen.generate_scenes(int(args.n / 5), args.obj)
-    scenegen.generate_scenes(int(args.n / 10), args.obj, n_uni_obj=int(args.n_unique)/10)
+    scenegen.generate_scenes(int(args.n / 10), args.obj, n_uni_obj=int(args.n_unique/10))
 
     # generate visualization for sanity
     if args.debug:

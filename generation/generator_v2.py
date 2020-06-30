@@ -198,14 +198,13 @@ class SceneGenerator():
         if objtype == 'refrigerator':
             base_name = 'fridgeinet_bottom'
 
-        tree = ET.parse(obj.xml)
-        root = tree.getroot()
+        root = ET.fromstring(obj.xml)
         for body in root.find('worldbody').findall('body'):
             if body.attrib['name'] == base_name:
                 base = body
         base.set('pos', '{} {} {}'.format(base_xyz[0], base_xyz[1], base_xyz[2]))
         base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
-        obj.xml = ET.tostring(root)
+        obj.xml = ET.tostring(root, encoding="unicode")
         return obj
 
     def generate_scenes(self, N, objtype, n_uni_obj=None, write_csv=True, save_imgs=True, mean_flag=False, left_only=False,
