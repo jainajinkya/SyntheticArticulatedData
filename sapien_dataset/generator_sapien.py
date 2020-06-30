@@ -95,19 +95,19 @@ class SceneGeneratorSapien():
                 base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 self.save_scene_file(obj_tree, xml_path, fname)
-                print("Scene saved in file:{}".format(fname))
-
+                
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
                 res = self.take_images(fname, o_id, grp, use_force=False)
                 if not res:
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
-                    print("Rejected sample")
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
                     grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype="S10", data=np.string_(ET.tostring(root)))
+                    print("Object idx sampled: ", o_id)
+                    print("Scene saved in file:{}".format(fname))
         return
 
     def take_images(self, filename, obj_idx, h5group, use_force=False):
