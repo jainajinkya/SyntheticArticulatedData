@@ -8,7 +8,7 @@ from sapien_dataset.generator_sapien import SceneGeneratorSapien
 def main(args):
     print("NOTE: THIS NEEDS MUJOCO TO BE RUN IN HEADLESS MODE. MAKE SURE YOU DO `unset LD_PRELOAD` BEFORE RUNNING THIS")
     if args.obj == 'microwave':
-        train_obj_idxs = ['7167', '7263', '7304', '7310', '7349', '7366', '7296', '7265']
+        train_obj_idxs = ['7167', '7263', '7304', '7310', '7349', '7366', '7265']
         test_obj_idxs = ['7119', '7128', '7236']
 
     # initialize Generator
@@ -42,7 +42,7 @@ def main(args):
 
     # generate visualization for sanity
     if args.debug:
-        make_animations(os.path.join(args.dir, args.obj), min(100, args.n * 16), use_color=args.debug)
+        make_animations(os.path.join(args.dir, args.obj), args.n * 16, use_color=args.debug)
 
 
 parser = argparse.ArgumentParser(description="tool for generating articulated object data")
