@@ -24,7 +24,9 @@ def main(args):
     scenegen.savedir = train_dir
 
     # generate train scenes
-    scenegen.generate_scenes(args.n, args.obj, mean_flag=args.mean, left_only=args.left_only, cute_flag=args.cute)
+    if args.n_unique == 0:
+        args.n_unique = args.n
+    scenegen.generate_scenes(args.n, args.obj, n_uni_obj=args.n_unique, mean_flag=args.mean, left_only=args.left_only, cute_flag=args.cute)
 
     # set generator's target directory for test data
     test_dir = os.path.join(args.dir, args.obj + '-test')
@@ -34,7 +36,7 @@ def main(args):
 
     # generate test scenes
     # scenegen.generate_scenes(int(args.n / 5), args.obj)
-    scenegen.generate_scenes(int(args.n / 10), args.obj)
+    scenegen.generate_scenes(int(args.n / 10), args.obj, n_uni_obj=int(args.n_unique)/10)
 
     # generate visualization for sanity
     if args.debug:
@@ -44,6 +46,8 @@ def main(args):
 parser = argparse.ArgumentParser(description="tool for generating articulated object data")
 parser.add_argument('--n', type=int, default=int(1),
                     help='number of examples to generate')
+parser.add_argument('--n_unique', type=int, default=int(0),
+                    help='number of unique object instances')
 parser.add_argument('--dir', type=str, default='../microtrain/')
 parser.add_argument('--obj', type=str, default='microwave')
 parser.add_argument('--masked', action='store_true', default=False, help='remove background of depth images?')

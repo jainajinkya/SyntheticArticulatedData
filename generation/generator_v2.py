@@ -1,8 +1,10 @@
 import pickle
+import random
 import time
 import os
 import csv
 import copy
+import xml.etree.ElementTree as ET
 
 import cv2
 import h5py
@@ -186,17 +188,42 @@ class SceneGenerator():
             raise Exception('uh oh, object not implemented!')
         return obj
 
-    def generate_scenes(self, N, objtype, write_csv=True, save_imgs=True, mean_flag=False, left_only=False,
+    def sample_object_pose(self, obj, objtype):
+        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+        base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
+        obj.pose = base_xyz
+        obj.rotation = base_quat
+
+        base_name = 'cabinet_bottom'
+        if objtype == 'refrigerator':
+            base_name = 'fridgeinet_bottom'
+
+        tree = ET.parse(obj.xml)
+        root = tree.getroot()
+        for body in root.find('worldbody').findall('body'):
+            if body.attrib['name'] == base_name:
+                base = body
+        base.set('pos', '{} {} {}'.format(base_xyz[0], base_xyz[1], base_xyz[2]))
+        base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
+        obj.xml = ET.tostring(root)
+        return obj
+
+    def generate_scenes(self, N, objtype, n_uni_obj=None, write_csv=True, save_imgs=True, mean_flag=False, left_only=False,
                         cute_flag=False):
+        if n_uni_obj is None or n_uni_obj == 0:
+            n_uni_obj = N
+        obj_instances = [self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag) for i in range(n_uni_obj)]
+
         fname = os.path.join(self.savedir, 'params.csv')
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
-            # for i in tqdm(range(N)):
             pbar = tqdm(total=N)
             while i < N:
-                obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
+                # obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
+                obj = random.choice(obj_instances)
+                obj = self.sample_object_pose(obj, objtype)
                 xml = obj.xml
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
