@@ -189,7 +189,11 @@ class SceneGenerator():
         return obj
 
     def sample_object_pose(self, obj, objtype):
-        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+        if objtype == 'drawer':
+            base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_drawer_2()
+        else:
+            base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+
         base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
         obj.pose = base_xyz
         obj.rotation = base_quat
