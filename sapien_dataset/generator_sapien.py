@@ -72,7 +72,6 @@ class SceneGeneratorSapien():
         xml_tree_object.write(fname, xml_declaration=True)
 
     def generate_scenes(self, N, obj_type):
-        import pdb; pdb.set_trace()
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
@@ -108,8 +107,7 @@ class SceneGeneratorSapien():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    grp.create_dataset('mujoco_scene_xml', dtype=h5py.string_dtype(encoding='ascii'),
-                                       data=ET.tostring(root))
+                    grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype="S10", data=np.string_(ET.tostring(root)))
         return
 
     def take_images(self, filename, obj_idx, h5group, use_force=False):
@@ -196,7 +194,7 @@ class SceneGeneratorSapien():
                 qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
-                x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
+                x_pos = np.append(sim.data.get_geom_xpos(handle_name), tf3d.quaternions.mat2quat(sim.data.get_geom_xmat(handle_name)))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(
