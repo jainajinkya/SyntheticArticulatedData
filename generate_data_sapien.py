@@ -2,17 +2,21 @@ import argparse
 import os
 
 from generation.inspect_data import make_animations
-from sapien_dataset.generator_sapien import SceneGenerator as SceneGenerator_sapien
+from sapien_dataset.generator_sapien import SceneGeneratorSapien
 
 
 def main(args):
     print("NOTE: THIS NEEDS MUJOCO TO BE RUN IN HEADLESS MODE. MAKE SURE YOU DO `unset LD_PRELOAD` BEFORE RUNNING THIS")
+    if args.obj == 'microwave':
+        train_obj_idxs = ['7167', '7263', '7304', '7310', '7320', '7349', '7366', '7296', '7265']
+        test_obj_idxs = ['7119', '7128', '7236']
 
     # initialize Generator
-    scenegen = SceneGenerator_sapien(object_xml_file=args.obj_xml_file,
-                                     root_dir=args.dir,
-                                     debug_flag=args.debug,
-                                     masked=args.masked)
+    scenegen = SceneGeneratorSapien(obj_idxs=train_obj_idxs,
+                                    xml_dir=args.xml_dir,
+                                    root_dir=args.dir,
+                                    debug_flag=args.debug,
+                                    masked=args.masked)
 
     # make root directory
     os.makedirs(os.path.abspath(args.dir), exist_ok=True)
@@ -33,7 +37,7 @@ def main(args):
     scenegen.savedir = test_dir
 
     # generate test scenes
-    # scenegen.generate_scenes(int(args.n / 5), args.obj)
+    scenegen.obj_idxs = test_obj_idxs
     scenegen.generate_scenes(int(args.n / 10), args.obj)
 
     # generate visualization for sanity
@@ -46,7 +50,8 @@ parser.add_argument('--n', type=int, default=int(1),
                     help='number of examples to generate')
 parser.add_argument('--dir', type=str, default='../microtrain/')
 parser.add_argument('--obj', type=str, default='microwave')
-parser.add_argument('--obj-xml-file', type=str, help='path to object xml file')
+# parser.add_argument('--obj-xml-file', type=str, help='path to object xml file')
+parser.add_argument('--xml-dir', type=str, help='path to object xml file directory')
 parser.add_argument('--masked', action='store_true', default=False, help='remove background of depth images?')
 parser.add_argument('--debug', action='store_true', default=False)
 main(parser.parse_args())

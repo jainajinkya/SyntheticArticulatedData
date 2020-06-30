@@ -1,5 +1,6 @@
 import copy
 import os
+import random
 import xml.etree.ElementTree as ET
 
 import cv2
@@ -43,8 +44,8 @@ def should_use_image_hack(img, bigger_image):
         return True
 
 
-class SceneGenerator():
-    def __init__(self, object_xml_file, root_dir='./data/', masked=False, debug_flag=False):
+class SceneGeneratorSapien():
+    def __init__(self, obj_idxs, xml_dir, root_dir='./data/', masked=False, debug_flag=False):
         '''
         Class for generating simulated articulated object dataset.
         params:
@@ -60,26 +61,28 @@ class SceneGenerator():
         self.depth_data = []
         self.debugging = debug_flag
 
-        self.obj_xml_file = os.path.abspath(object_xml_file)
-        self.obj_xml_tree = ET.parse(self.obj_xml_file)
-        self.obj_xml_root = self.obj_xml_tree.getroot()
+        self.obj_idxs = obj_idxs
+        self.xml_dir = xml_dir
         print(root_dir)
 
-    def save_scene_file(self, xml_tree_object, fname):
-        mesh_file_path = os.path.dirname(self.obj_xml_file) + '/textured_objs/'
+    def save_scene_file(self, xml_tree_object, xml_path, fname):
+        mesh_file_path = xml_path + '/textured_objs/'
         root = xml_tree_object.getroot()
         root.find('compiler').set('meshdir', mesh_file_path)
         xml_tree_object.write(fname, xml_declaration=True)
 
     def generate_scenes(self, N, obj_type):
+        import pdb; pdb.set_trace()
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
             while i < N:
-                obj = copy.copy(self.obj_xml_tree)
-                root = obj.getroot()
+                o_id = random.choice(self.obj_idxs)
+                xml_path = os.path.join(self.xml_dir, o_id)
+                obj_tree = copy.copy(ET.parse(xml_path + '/mobility_mujoco.xml'))
+                root = obj_tree.getroot()
 
                 # Sample object pose
                 base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_sapien()
@@ -92,12 +95,12 @@ class SceneGenerator():
                 base.set('pos', '{} {} {}'.format(base_xyz[0], base_xyz[1], base_xyz[2]))
                 base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
-                self.save_scene_file(obj, fname)
+                self.save_scene_file(obj_tree, xml_path, fname)
                 print("Scene saved in file:{}".format(fname))
 
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
-                res = self.take_images(fname, obj_type, grp, use_force=False)
+                res = self.take_images(fname, o_id, grp, use_force=False)
                 if not res:
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
@@ -107,18 +110,27 @@ class SceneGenerator():
                     self.scenes.append(fname)
                     grp.create_dataset('mujoco_scene_xml', dtype=h5py.string_dtype(encoding='ascii'),
                                        data=ET.tostring(root))
-                    # grp[:] = ET.tostring(root)
         return
 
-    def take_images(self, filename, obj_type, h5group, use_force=False):
+    def take_images(self, filename, obj_idx, h5group, use_force=False):
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
 
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
-        # handle_name = 'handle'
+        if obj_idx in ['7119', '7167', '7263', '7310']:
+            handle_name = 'handle'
+        elif obj_idx in ['7265']:
+            handle_name = 'glass'
+        else:
+            handle_name = 'door'
+
+        act_idx = 0
+        if obj_idx in ['7349', '7366']:
+            act_idx = 1
+
         n_qpos_variables = 1
-        sim.data.ctrl[0] = 0.1  # + 0.5 * np.random.randn()   # Random variation
+        sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
 
         # obj_type = 0
         # embedding = np.append(obj_type, obj.geom.reshape(-1))
@@ -131,15 +143,6 @@ class SceneGenerator():
         IMG_WIDTH = calibrations.sim_width
         IMG_HEIGHT = calibrations.sim_height
         #########################
-
-        # force = np.array([0., 0., 0.])
-        # if use_force:
-        #     # Generating Data by applying random Cartesian forces
-        #     sim.data.ctrl[0] = 0.
-        #     force = np.array([-1., 0., 0.])
-        #     torque = np.array([0., 0., 0.])
-        #     pt = sim.data.get_body_xpos(handle_name)
-        #     bodyid = sim.model.body_name2id(handle_name)
 
         q_vals = []
         qdot_vals = []
@@ -154,10 +157,6 @@ class SceneGenerator():
         img_counter = 0
 
         while t < 4000:
-            # if use_force:
-            #     sim.data.qfrc_applied.fill(0.)  # Have to clear previous data
-            #     functions.mj_applyFT(model, sim.data, force, torque, pt, bodyid, sim.data.qfrc_applied)
-
             sim.forward()
             sim.step()
 
@@ -197,9 +196,8 @@ class SceneGenerator():
                 qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
-                # applied_forces.append(copy.copy(force))
-                # x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
-                # moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
+                x_pos = np.append(sim.data.get_geom_xpos(handle_name), sim.data.get_geom_xquat(handle_name))
+                moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(
                 #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
