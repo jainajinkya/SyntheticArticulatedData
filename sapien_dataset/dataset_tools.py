@@ -78,17 +78,19 @@ def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
     # NOT ADDING THIS FEATURE AS IT NEEDS MORE WORK. URDF CAN CONTAIN MULTIPLE VISUAL TAGS WITH SAME NAME, WHICH WON"T
     # WORK IN MUJOCO. NEED A BETTER SOLUTION
     # geom_names = []
-    # if obj_type == 'microwave':
-    #     geom_names = ['body', 'frame', 'door', 'glass', 'handle', 'tray']
+    if obj_type == 'microwave':
+        geom_names = ['body', 'frame', 'door', 'glass', 'handle', 'tray']
+
     # # find the name in the urdf file
     visElemList = {}
     for vis in urdf_root.iter("visual"):
         m_name = vis.find('geometry').find('mesh').attrib['filename'].replace('textured_objs/', '').replace('.stl', '')
         text_name = vis.attrib['name']
-        # if np.size(np.where([x in text_name for x in geom_names])[0]) > 0:
-        #     text_name = geom_names[np.where([x in text_name for x in geom_names])[0][0]]
-        #     visElemList[m_name] = text_name
-        visElemList[m_name] = text_name
+        if np.size(np.where([x in text_name for x in geom_names])[0]) > 0:
+            text_name = geom_names[np.where([x in text_name for x in geom_names])[0][0]]
+            visElemList[m_name] = text_name
+            geom_names.remove(text_name)
+        # visElemList[m_name] = text_name
 
     # find and update the tag in the xml file
     for body in xml_root.iter('body'):

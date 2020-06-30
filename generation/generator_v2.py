@@ -285,7 +285,7 @@ class SceneGenerator():
 
             """ Recording data for linear regression at a different frequency than images """
             # if t % 10 == 0:
-            if t % 25 == 0:
+            if t % 250 == 0:
                 img, depth = sim.render(IMG_WIDTH, IMG_HEIGHT, camera_name='external_camera_0', depth=True)
                 depth = vertical_flip(depth)
                 real_depth = buffer_to_real(depth, 12.0, 0.1)
