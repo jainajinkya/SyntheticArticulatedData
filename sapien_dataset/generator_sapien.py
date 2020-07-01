@@ -106,7 +106,7 @@ class SceneGeneratorSapien():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    asciilist = [n.encode('unicode_escape') for n in ET.tostringlist(root, encoding='unicode')]
+                    asciilist = [n.encode("ascii", "ignore") for n in ET.tostringlist(root, encoding='us-ascii')]
                     grp.create_dataset('mujoco_scene_xml', shape=(len(asciilist), 1), dtype='S10', data=asciilist)
 
                     # print("Object idx sampled: ", o_id)
