@@ -16,7 +16,7 @@ def make_mesh_watertight(file_in, file_out):
     bnds = np.array(mesh.bounding_box.extents)
     bad_cols = np.nonzero(bnds < 1e-6)
     if bad_cols[0].size > 0:
-        try: 
+        try:
             mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
                                                            mesh.faces, height=0.001)
             mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='QbB Pp Qt Qw')
@@ -77,16 +77,20 @@ def generate_mujoco_scene_xml(urdf_file, xml_file, obj_type='microwave'):
 def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
     # NOT ADDING THIS FEATURE AS IT NEEDS MORE WORK. URDF CAN CONTAIN MULTIPLE VISUAL TAGS WITH SAME NAME, WHICH WON"T
     # WORK IN MUJOCO. NEED A BETTER SOLUTION
-    # geom_names = []
+    geom_names = []
+    restricted = []
+
     if obj_type == 'microwave':
         geom_names = ['body', 'frame', 'door', 'glass', 'handle', 'tray']
+        restricted = ['button']
 
     # # find the name in the urdf file
     visElemList = {}
     for vis in urdf_root.iter("visual"):
         m_name = vis.find('geometry').find('mesh').attrib['filename'].replace('textured_objs/', '').replace('.stl', '')
         text_name = vis.attrib['name']
-        if np.size(np.where([x in text_name for x in geom_names])[0]) > 0:
+        if np.size(np.where([x in text_name for x in geom_names])[0]) > 0 and \
+                np.size(np.where([y in text_name for y in restricted])[0]) == 0:
             text_name = geom_names[np.where([x in text_name for x in geom_names])[0][0]]
             visElemList[m_name] = text_name
             geom_names.remove(text_name)

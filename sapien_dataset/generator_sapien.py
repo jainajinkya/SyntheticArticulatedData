@@ -119,7 +119,7 @@ class SceneGeneratorSapien():
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
         if obj_idx in ['7119', '7167', '7263', '7310']:
             handle_name = 'handle'
-        elif obj_idx in ['7265', '7349']:
+        elif obj_idx in ['7265', '7349', '7128']:
             handle_name = 'glass'
         else:
             handle_name = 'door'
