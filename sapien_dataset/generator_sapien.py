@@ -77,6 +77,7 @@ class SceneGeneratorSapien():
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
+            dt = h5py.special_dtype(vlen=str)  # Custom datatype for saving mujoco xml file in h5py
             while i < N:
                 #o_id = random.choice(self.obj_idxs)
                 o_id = self.obj_idxs[int(i%len(self.obj_idxs))]
@@ -106,9 +107,10 @@ class SceneGeneratorSapien():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype="S10", data=np.string_(ET.tostring(root)))
-                    print("Object idx sampled: ", o_id)
-                    print("Scene saved in file:{}".format(fname))
+                    grp.create_dataset('mujoco_scene_xml', shape=(100,), dtype=dt)
+                    grp[0] = ET.tostring(root, encoding="unicode")
+                    # print("Object idx sampled: ", o_id)
+                    # print("Scene saved in file:{}".format(fname))
         return
 
     def take_images(self, filename, obj_idx, h5group, use_force=False):
