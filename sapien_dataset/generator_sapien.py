@@ -78,7 +78,8 @@ class SceneGeneratorSapien():
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
             while i < N:
-                o_id = random.choice(self.obj_idxs)
+                #o_id = random.choice(self.obj_idxs)
+                o_id = self.obj_idxs[int(i%len(self.obj_idxs)]
                 xml_path = os.path.join(self.xml_dir, o_id)
                 obj_tree = copy.copy(ET.parse(xml_path + '/mobility_mujoco.xml'))
                 root = obj_tree.getroot()
