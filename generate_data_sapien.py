@@ -42,7 +42,8 @@ def main(args):
 
     # generate visualization for sanity
     if args.debug:
-        make_animations(os.path.join(args.dir, args.obj), args.n * 16, use_color=args.debug)
+        make_animations(train_dir, args.n * 16, use_color=args.debug)
+        make_animations(test_dir, int(args.n/10) * 16, use_color=args.debug)
 
 
 parser = argparse.ArgumentParser(description="tool for generating articulated object data")
