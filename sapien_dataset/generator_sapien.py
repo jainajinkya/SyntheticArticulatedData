@@ -79,7 +79,7 @@ class SceneGeneratorSapien():
             pbar = tqdm(total=N)
             while i < N:
                 #o_id = random.choice(self.obj_idxs)
-                o_id = self.obj_idxs[int(i%len(self.obj_idxs)]
+                o_id = self.obj_idxs[int(i%len(self.obj_idxs))]
                 xml_path = os.path.join(self.xml_dir, o_id)
                 obj_tree = copy.copy(ET.parse(xml_path + '/mobility_mujoco.xml'))
                 root = obj_tree.getroot()
@@ -119,7 +119,7 @@ class SceneGeneratorSapien():
         # embedding = np.append(obj.type, obj.geom.reshape(-1))
         if obj_idx in ['7119', '7167', '7263', '7310']:
             handle_name = 'handle'
-        elif obj_idx in ['7265']:
+        elif obj_idx in ['7265', '7349']:
             handle_name = 'glass'
         else:
             handle_name = 'door'
