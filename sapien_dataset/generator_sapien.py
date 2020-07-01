@@ -106,8 +106,12 @@ class SceneGeneratorSapien():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    asciilist = [n.encode("ascii", "ignore") for n in ET.tostringlist(root, encoding='us-ascii')]
-                    grp.create_dataset('mujoco_scene_xml', shape=(len(asciilist), 1), dtype='S10', data=asciilist)
+                    # asciilist = [n.encode("ascii", "ignore") for n in ET.tostringlist(root, encoding='us-ascii')]
+                    # grp.create_dataset('mujoco_scene_xml', shape=(len(asciilist), 1), dtype='S10', data=asciilist)
+
+                    str_type = h5py.string_dtype()
+                    ds = grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype=str_type)
+                    ds[:] = ET.tostring(root)
 
                     # print("Object idx sampled: ", o_id)
                     # print("Scene saved in file:{}".format(fname))
