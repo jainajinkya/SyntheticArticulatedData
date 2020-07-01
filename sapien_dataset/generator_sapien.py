@@ -1,6 +1,5 @@
 import copy
 import os
-import random
 import xml.etree.ElementTree as ET
 
 import cv2
@@ -10,7 +9,7 @@ import torch
 import transforms3d as tf3d
 from SyntheticArticulatedData.generation import calibrations
 from SyntheticArticulatedData.generation.utils import sample_pose_sapien
-from mujoco_py import load_model_from_path, MjSim, functions
+from mujoco_py import load_model_from_path, MjSim
 from mujoco_py.modder import TextureModder
 from tqdm import tqdm
 
@@ -77,9 +76,9 @@ class SceneGeneratorSapien():
         i = 0
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
+            str_type = h5py.string_dtype()
             while i < N:
-                #o_id = random.choice(self.obj_idxs)
-                o_id = self.obj_idxs[int(i%len(self.obj_idxs))]
+                o_id = self.obj_idxs[int(i % len(self.obj_idxs))]
                 xml_path = os.path.join(self.xml_dir, o_id)
                 obj_tree = copy.copy(ET.parse(xml_path + '/mobility_mujoco.xml'))
                 root = obj_tree.getroot()
@@ -87,7 +86,7 @@ class SceneGeneratorSapien():
                 # Sample object pose
                 base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_sapien()
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')  # wxyz
-                print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
+                # print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
                 # Update object pose
                 for body in root.find('worldbody').findall('body'):
                     if body.attrib['name'] == 'base':
@@ -96,7 +95,7 @@ class SceneGeneratorSapien():
                 base.set('quat', '{} {} {} {}'.format(base_quat[0], base_quat[1], base_quat[2], base_quat[3]))  # wxyz
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 self.save_scene_file(obj_tree, xml_path, fname)
-                
+
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
                 res = self.take_images(fname, o_id, grp, use_force=False)
@@ -106,15 +105,8 @@ class SceneGeneratorSapien():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    # asciilist = [n.encode("ascii", "ignore") for n in ET.tostringlist(root, encoding='us-ascii')]
-                    # grp.create_dataset('mujoco_scene_xml', shape=(len(asciilist), 1), dtype='S10', data=asciilist)
-
-                    str_type = h5py.string_dtype()
                     ds = grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype=str_type)
                     ds[:] = ET.tostring(root)
-
-                    # print("Object idx sampled: ", o_id)
-                    # print("Scene saved in file:{}".format(fname))
         return
 
     def take_images(self, filename, obj_idx, h5group, use_force=False):
@@ -201,7 +193,8 @@ class SceneGeneratorSapien():
                 qdot_vals.append(copy.copy(sim.data.qvel[:n_qpos_variables]))
                 qddot_vals.append(copy.copy(sim.data.qacc[:n_qpos_variables]))
                 torque_vals.append(copy.copy(sim.data.qfrc_applied[:n_qpos_variables]))
-                x_pos = np.append(sim.data.get_geom_xpos(handle_name), tf3d.quaternions.mat2quat(sim.data.get_geom_xmat(handle_name)))
+                x_pos = np.append(sim.data.get_geom_xpos(handle_name),
+                                  tf3d.quaternions.mat2quat(sim.data.get_geom_xmat(handle_name)))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
                 # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
                 # moving_frame_xpos_ref_frame.append(copy.copy(

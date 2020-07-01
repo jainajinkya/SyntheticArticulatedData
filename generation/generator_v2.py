@@ -195,6 +195,7 @@ class SceneGenerator():
         with h5py.File(h5fname, 'a') as h5File:
             # for i in tqdm(range(N)):
             pbar = tqdm(total=N)
+            str_type = h5py.string_dtype()
             while i < N:
                 obj = self.sample_obj(objtype, mean_flag, left_only, cute_flag=cute_flag)
                 xml = obj.xml
@@ -208,7 +209,8 @@ class SceneGenerator():
                     i += 1
                     pbar.update(1)
                     self.scenes.append(fname)
-                    grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype="S10", data=np.string_(xml))
+                    ds = grp.create_dataset('mujoco_scene_xml', shape=(1,), dtype=str_type)
+                    ds[:] = xml
         return
 
     def take_images(self, filename, obj, h5group, use_force=False):
