@@ -10,8 +10,14 @@ def main(args):
     if args.obj == 'microwave':
         # train_obj_idxs = ['7167', '7263', '7304', '7310', '7349', '7366', '7265']
         # test_obj_idxs = ['7119', '7128', '7236']
-        test_obj_idxs = ['7304', '7349']  # All have local axis along +y
-        train_obj_idxs = ['7119', '7128', '7236']
+
+        # All have local axis along +y
+        # test_obj_idxs = ['7304', '7349']
+        # train_obj_idxs = ['7119', '7128', '7236']
+
+        # Mixed
+        test_obj_idxs = ['7304', '7349', '7167', '7263']
+        train_obj_idxs = ['7119', '7128', '7263', '7310', '7366', '7273', '7265']
 
     # initialize Generator
     scenegen = SceneGeneratorSapien(obj_idxs=train_obj_idxs,
