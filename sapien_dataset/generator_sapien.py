@@ -128,6 +128,7 @@ class SceneGeneratorSapien():
 
         n_qpos_variables = 1
         sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
+        joint_name = 'joint_{}'.format(act_idx)
 
         # obj_type = 0
         # embedding = np.append(obj_type, obj.geom.reshape(-1))
@@ -147,7 +148,8 @@ class SceneGeneratorSapien():
         torque_vals = []
         applied_forces = []
         moving_frame_xpos_world = []
-        moving_frame_xpos_ref_frame = []
+        joint_axis_in_world = []
+        joint_anchor_in_world = []
         depth_imgs = torch.Tensor()
 
         t = 0
@@ -196,7 +198,8 @@ class SceneGeneratorSapien():
                 x_pos = np.append(sim.data.get_geom_xpos(handle_name),
                                   tf3d.quaternions.mat2quat(sim.data.get_geom_xmat(handle_name)))
                 moving_frame_xpos_world.append(copy.copy(x_pos))  # quat comes in wxyz form
-                # joint_frame_in_world = np.append(sim.data.get_body_xpos(joint_body_name), obj.rotation)
+                joint_axis_in_world.append(sim.data.get_joint_xaxis(joint_name))
+                joint_anchor_in_world.append(sim.data.get_joint_xanchor(joint_name))
                 # moving_frame_xpos_ref_frame.append(copy.copy(
                 #     change_frames(frame_B_wrt_A=joint_frame_in_world, pose_wrt_A=x_pos)))
 
@@ -206,7 +209,8 @@ class SceneGeneratorSapien():
             t += 1
 
         # h5group.create_dataset('embedding_and_params', data=embedding_and_params)
-        # h5group.create_dataset('joint_frame_in_world', data=joint_frame_in_world)
+        h5group.create_dataset('joint_axis_in_world', data=np.array(joint_axis_in_world))
+        h5group.create_dataset('joint_anchor_in_world', data=np.array(joint_anchor_in_world))
         h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
         # h5group.create_dataset('moving_frame_in_ref_frame', data=np.array(moving_frame_xpos_ref_frame))
         h5group.create_dataset('depth_imgs', data=depth_imgs)
