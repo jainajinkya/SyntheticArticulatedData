@@ -128,7 +128,10 @@ class SceneGeneratorSapien():
 
         n_qpos_variables = 1
         sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
+
         joint_name = 'joint_{}'.format(act_idx)
+        if obj_idx in ['7304']:
+            joint_name = 'joint_1'
 
         # obj_type = 0
         # embedding = np.append(obj_type, obj.geom.reshape(-1))
