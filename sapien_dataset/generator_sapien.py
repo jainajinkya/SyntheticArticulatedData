@@ -7,16 +7,12 @@ import h5py
 import numpy as np
 import torch
 import transforms3d as tf3d
-from SyntheticArticulatedData.generation import calibrations
-from SyntheticArticulatedData.generation.utils import sample_pose_sapien
+from SyntheticArticulatedData.generation import calibrations, ArticulatedObject
+from SyntheticArticulatedData.generation.utils import sample_pose_sapien, get_cam_relative_params2
 from mujoco_py import load_model_from_path, MjSim
 from mujoco_py.modder import TextureModder
 from tqdm import tqdm
 
-
-# Load points for the object. Subsample if needed
-# Sample pose of the object. Transform point cloud to that pose
-# Use projection matrix to project to camera plane. Check the distance from the image center
 
 def white_bg(img):
     mask = 1 - (img > 0)
@@ -74,6 +70,8 @@ class SceneGeneratorSapien():
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
+        class_ids = {'microwave': 0, 'drawer': 1}  # Needed for GK Baseline
+
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
             str_type = h5py.string_dtype()
@@ -96,9 +94,21 @@ class SceneGeneratorSapien():
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 self.save_scene_file(obj_tree, xml_path, fname)
 
+                # For Generalizing Kinematics Baseline
+                if o_id in ['7119', '7167', '7263', '7310']:
+                    handle_name = 'handle'
+                elif o_id in ['7265', '7349', '7128']:
+                    handle_name = 'glass'
+                else:
+                    handle_name = 'door'
+
+                geom = self.extract_geometry(root, handle_name)
+                params = self.extract_params(geom)
+                gk_obj = ArticulatedObject(class_ids[obj_type], geom, params, '', base_xyz, base_quat)
+
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
-                res = self.take_images(fname, o_id, grp, use_force=False)
+                res = self.take_images(fname, o_id, grp, gk_obj, handle_name, use_force=False)
                 if not res:
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
@@ -109,18 +119,10 @@ class SceneGeneratorSapien():
                     ds[:] = ET.tostring(root)
         return
 
-    def take_images(self, filename, obj_idx, h5group, use_force=False):
+    def take_images(self, filename, obj_idx, h5group, gk_obj=None, handle_name='handle', use_force=False):
         model = load_model_from_path(filename)
         sim = MjSim(model)
         modder = TextureModder(sim)
-
-        # embedding = np.append(obj.type, obj.geom.reshape(-1))
-        if obj_idx in ['7119', '7167', '7263', '7310']:
-            handle_name = 'handle'
-        elif obj_idx in ['7265', '7349', '7128']:
-            handle_name = 'glass'
-        else:
-            handle_name = 'door'
 
         act_idx = 0
         if obj_idx in ['7349', '7366']:
@@ -133,11 +135,11 @@ class SceneGeneratorSapien():
         if obj_idx in ['7304']:
             joint_name = 'joint_1'
 
-        # obj_type = 0
-        # embedding = np.append(obj_type, obj.geom.reshape(-1))
-        # params = get_cam_relative_params2(obj)  # if 1DoF, params is length 10. If 2DoF, params is length 20.
+        ''' GK baseline'''
+        embedding = np.append(gk_obj.type, gk_obj.geom.reshape(-1))
+        params = get_cam_relative_params2(gk_obj)  # if 1DoF, params is length 10. If 2DoF, params is length 20.
 
-        # embedding_and_params = np.concatenate((embedding, params, obj.pose, obj.rotation))
+        embedding_and_params = np.concatenate((embedding, params, gk_obj.pose, gk_obj.rotation))
         # object_reference_frame_in_world = np.concatenate((obj.pose, obj.rotation))
 
         #########################
@@ -211,7 +213,7 @@ class SceneGeneratorSapien():
 
             t += 1
 
-        # h5group.create_dataset('embedding_and_params', data=embedding_and_params)
+        h5group.create_dataset('embedding_and_params', data=embedding_and_params)
         h5group.create_dataset('joint_axis_in_world', data=np.array(joint_axis_in_world))
         h5group.create_dataset('joint_anchor_in_world', data=np.array(joint_anchor_in_world))
         h5group.create_dataset('moving_frame_in_world', data=np.array(moving_frame_xpos_world))
@@ -225,3 +227,16 @@ class SceneGeneratorSapien():
         h5group.create_dataset('forces', data=np.array(applied_forces))
 
         return True
+
+    def extract_geometry(self, xml_root, handle_name='handle'):
+        for geom in xml_root.iter('geom'):
+            if 'name' in geom.attrib.keys() and geom.attrib['name'] == handle_name:
+                dims = [2 * abs(float(x)) for x in geom.attrib['pos'].split(' ')]
+        left = True
+        thicc = 0.01
+        geometry = np.array([dims[0], dims[1], thicc, left])  # length = 4
+        return geometry
+
+    def extract_params(self, geom):
+        params = np.array([[-geom[0], -geom[1], -geom[2]], [geom[0], geom[1], geom[2]]])  # length = 6
+        return params
