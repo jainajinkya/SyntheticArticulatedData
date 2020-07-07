@@ -7,7 +7,8 @@ import h5py
 import numpy as np
 import torch
 import transforms3d as tf3d
-from SyntheticArticulatedData.generation import calibrations, ArticulatedObject
+from SyntheticArticulatedData.generation import calibrations
+from SyntheticArticulatedData.generation.ArticulatedObjs import ArticulatedObject
 from SyntheticArticulatedData.generation.utils import sample_pose_sapien, get_cam_relative_params2
 from mujoco_py import load_model_from_path, MjSim
 from mujoco_py.modder import TextureModder
