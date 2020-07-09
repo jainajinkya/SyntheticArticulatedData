@@ -5,7 +5,7 @@ OBJ_TYPE=$2
 
 # change .obj files to .stl:
 for filename in ${DATADIR}textured_objs/*.obj; do
-  ctmconv "$filename" "${filename/.obj/.stl}";
+  ctmconv "$filename" "${filename/.obj/.stl}" > obj2res.txt;
 done
 
 # Correct mesh if needed
