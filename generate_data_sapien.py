@@ -13,12 +13,12 @@ def main(args):
         # train_obj_idxs = ['7119', '7128', '7236']
 
         # All have local axis along +z
-        test_obj_idxs = ['7167', '7263', '7310']
-        train_obj_idxs = ['7366']
+        # test_obj_idxs = ['7167', '7263', '7310']
+        # train_obj_idxs = ['7366']
 
-        # # Mixed
-        # test_obj_idxs = ['7304', '7349', '7167', '7263']
-        # train_obj_idxs = ['7119', '7128', '7263', '7310', '7366', '7273', '7265']
+        # Mixed
+        test_obj_idxs = ['7304', '7349', '7167']
+        train_obj_idxs = ['7119', '7128', '7236', '7263', '7310', '7366', '7273', '7265']
 
     # initialize Generator
     scenegen = SceneGeneratorSapien(obj_idxs=train_obj_idxs,
