@@ -305,7 +305,7 @@ if __name__ == "__main__":
                 make_mesh_watertight(mesh_in, mesh_out)
                 # print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
             except:
-                print("Failed to correct mesh:{}".format(mesh_in))
+                print(">>>>>>>>>> Failed to correct mesh:{}".format(mesh_in))
 
     elif args.update_xml_tags:
         generate_mujoco_scene_xml(urdf_file=args.input_files[0], xml_file=args.output_files[0], obj_type=args.obj_type)
