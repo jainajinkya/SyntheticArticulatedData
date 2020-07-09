@@ -298,8 +298,11 @@ if __name__ == "__main__":
         for mesh_in, mesh_out in zip(args.input_files, args.output_files):
             mesh_in = os.path.abspath(mesh_in)
             mesh_out = os.path.abspath(mesh_out)
-            make_mesh_watertight(mesh_in, mesh_out)
-            print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
+            try:
+                make_mesh_watertight(mesh_in, mesh_out)
+                # print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
+            except:
+                print("Failed to correct mesh:{}".format(mesh_in))
 
     elif args.update_xml_tags:
         generate_mujoco_scene_xml(urdf_file=args.input_files[0], xml_file=args.output_files[0], obj_type=args.obj_type)
