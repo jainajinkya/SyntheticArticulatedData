@@ -5,7 +5,7 @@ import transforms3d as tf3d
 
 from SyntheticArticulatedData.generation.ArticulatedObjs import ArticulatedObject
 from SyntheticArticulatedData.generation.utils import make_string, make_single_string, make_quat_string, \
-    get_cam_relative_params2, get_cam_params, sample_pose_2
+    get_cam_relative_params2, get_cam_params, sample_pose_cabinet
 
 d_len = dist.Uniform(0.28, 0.32)
 d_width = dist.Uniform(0.3, 0.7)
@@ -57,7 +57,7 @@ def build_cabinet(length, width, height, thicc, left, set_pose=None, set_rot=Non
     if not set_pose:
         # base_xyz, base_angle = sample_pose()
         # base_quat = angle_to_quat(base_angle)
-        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_2()
+        base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_cabinet()
         base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')
     else:
         base_xyz = tuple(set_pose)
