@@ -132,11 +132,11 @@ class SceneGenerator():
 
         elif obj_type == 'cabinet':
             l, w, h, t, left, mass = sample_cabinet(mean_flag)
+            if left_only:
+                left = True
+            else:
+                left = False
             if mean_flag:
-                if left_only:
-                    left = True
-                else:
-                    left = False
                 obj = build_cabinet(l, w, h, t, left,
                                     set_pose=[1.5, 0.0, -0.3],
                                     set_rot=[0.0, 0.0, 0.0, 1.0])
@@ -147,7 +147,7 @@ class SceneGenerator():
                                     set_pose=[1.5, 0.0, -0.15],
                                     set_rot=base_quat)
             else:
-                left = np.random.choice([True, False])
+                # left = np.random.choice([True, False])
                 obj = build_cabinet(l, w, h, t, left)
 
         elif obj_type == 'cabinet2':
