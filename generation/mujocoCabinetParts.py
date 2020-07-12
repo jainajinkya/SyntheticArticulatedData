@@ -1,6 +1,7 @@
 import numpy as np
 import pyro
 import pyro.distributions as dist
+import transforms3d as tf3d
 
 from SyntheticArticulatedData.generation.ArticulatedObjs import ArticulatedObject
 from SyntheticArticulatedData.generation.utils import make_string, make_single_string, make_quat_string, \
