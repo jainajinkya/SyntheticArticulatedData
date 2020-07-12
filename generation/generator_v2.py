@@ -135,8 +135,13 @@ class SceneGenerator():
             if left_only:
                 left = True
             else:
-                left = False
+                # left = False
+                left = np.random.choice([True, False])
             if mean_flag:
+                if left_only:
+                    left = True
+                else:
+                    left = False
                 obj = build_cabinet(l, w, h, t, left,
                                     set_pose=[1.5, 0.0, -0.3],
                                     set_rot=[0.0, 0.0, 0.0, 1.0])
