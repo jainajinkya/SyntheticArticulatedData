@@ -71,7 +71,7 @@ class SceneGeneratorSapien():
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
-        class_ids = {'microwave': 0, 'drawer': 1}  # Needed for GK Baseline
+        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11}  # Needed for GK Baseline
 
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
@@ -96,12 +96,21 @@ class SceneGeneratorSapien():
                 self.save_scene_file(obj_tree, xml_path, fname)
 
                 # For Generalizing Kinematics Baseline
-                if o_id in ['7119', '7167', '7263', '7310']:
-                    handle_name = 'handle'
-                elif o_id in ['7265', '7349', '7128']:
-                    handle_name = 'glass'
-                else:
-                    handle_name = 'door'
+                if obj_type == 'microwave':
+                    if o_id in ['7119', '7167', '7263', '7310']:
+                        handle_name = 'handle'
+                    elif o_id in ['7265', '7349', '7128']:
+                        handle_name = 'glass'
+                    else:
+                        handle_name = 'door'
+
+                elif obj_type == 'dishwasher':
+                    if o_id in ['12349', '12558', '12560']:
+                        handle_name = 'door_frame'
+                    elif o_id in ['12594']:
+                        handle_name = 'control_button'
+                    else:
+                        handle_name = 'door'
 
                 geom = self.extract_geometry(root, handle_name)
                 params = self.extract_params(geom)
@@ -128,6 +137,10 @@ class SceneGeneratorSapien():
         act_idx = 0
         if obj_idx in ['7349', '7366']:
             act_idx = 1
+        if obj_idx in ['11826', '12065']:
+            act_idx = 2
+        if obj_idx in ['12428']:
+            act_idx = 4
 
         n_qpos_variables = 1
         sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
