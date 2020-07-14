@@ -173,7 +173,7 @@ def sample_pose_sapien():
 
 
 def sample_pose_sapien_dishwasher():
-    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.75, -0.8, -0.7]), torch.tensor([2.75, 0.8, 0.3]))).numpy()
+    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.75, -1.0, -0.7]), torch.tensor([2.75, 1.0, 0.3]))).numpy()
     angle_x = pyro.sample('angle_x', dist.Uniform(-np.pi / 4, np.pi / 4)).item()
     angle_y = pyro.sample('angle_y', dist.Uniform(-np.pi / 4, np.pi / 4)).item()
     angle_z = pyro.sample('angle_z', dist.Uniform(-1 / 4 * 3.14, 1 / 4 * 3.14)).item()
