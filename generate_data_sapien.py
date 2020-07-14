@@ -21,10 +21,10 @@ def main(args):
         train_obj_idxs = ['7119', '7128', '7236', '7263', '7310', '7366', '7273', '7265']
 
     elif args.obj == 'dishwasher':
-        test_obj_idxs = ['12605', '12606', '12614', '12617', '12621', '11826', '12065', '12428']
+        test_obj_idxs = ['12605', '12606', '12614', '12617', '12621', '11826', '12065', '12596', '12597']
         train_obj_idxs = ['11622', '11700', '12092', '12259', '12349', '12480', '12530', '12531', '12536', '12540',
                           '12543', '12552', '12553', '12558', '12559', '12560', '12561', '12562', '12563', '12565',
-                          '12579', '12580', '12583', '12587', '12590', '12592', '12594', '12596', '12597']
+                          '12579', '12580', '12583', '12587', '12590', '12592', '12594']
 
     # initialize Generator
     scenegen = SceneGeneratorSapien(obj_idxs=train_obj_idxs,
@@ -53,12 +53,12 @@ def main(args):
 
     # generate test scenes
     scenegen.obj_idxs = test_obj_idxs
-    scenegen.generate_scenes(int(args.n / 2), args.obj)
+    scenegen.generate_scenes(int(args.n / 10), args.obj)
 
     # generate visualization for sanity
     if args.debug:
         make_animations(train_dir, args.n * 16, use_color=args.debug)
-        make_animations(test_dir, int(args.n / 2) * 16, use_color=args.debug)
+        make_animations(test_dir, int(args.n / 10) * 16, use_color=args.debug)
 
 
 parser = argparse.ArgumentParser(description="tool for generating articulated object data")
