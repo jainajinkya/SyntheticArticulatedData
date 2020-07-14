@@ -8,8 +8,9 @@ import numpy as np
 import torch
 import transforms3d as tf3d
 from SyntheticArticulatedData.generation import calibrations
-from SyntheticArticulatedData.generation.ArticulatedObjs import ArticulatedObject
-from SyntheticArticulatedData.generation.utils import sample_pose_sapien, get_cam_relative_params2, sample_pose_sapien_dishwasher
+from SyntheticArticulatedData.generation.utils import sample_pose_sapien, get_cam_relative_params2, \
+    sample_pose_sapien_dishwasher, change_frames
+from SyntheticArticulatedData.sapien_dataset.ArticulatedObjsSapien import ArticulatedObjectSapien
 from mujoco_py import load_model_from_path, MjSim
 from mujoco_py.modder import TextureModder
 from tqdm import tqdm
@@ -71,7 +72,6 @@ class SceneGeneratorSapien():
         h5fname = os.path.join(self.savedir, 'complete_data.hdf5')
         self.img_idx = 0
         i = 0
-        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11}  # Needed for GK Baseline
 
         with h5py.File(h5fname, 'a') as h5File:
             pbar = tqdm(total=N)
@@ -90,6 +90,7 @@ class SceneGeneratorSapien():
 
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')  # wxyz
                 # print("Sampled base pose:{}  {}".format(base_xyz, base_quat))
+
                 # Update object pose
                 for body in root.find('worldbody').findall('body'):
                     if body.attrib['name'] == 'base':
@@ -99,25 +100,12 @@ class SceneGeneratorSapien():
                 fname = os.path.join(self.savedir, 'scene' + str(i).zfill(6) + '.xml')
                 self.save_scene_file(obj_tree, xml_path, fname)
 
-                # For Generalizing Kinematics Baseline
-                if obj_type == 'microwave':
-                    if o_id in ['7119', '7167', '7263', '7310']:
-                        handle_name = 'handle'
-                    elif o_id in ['7265', '7349', '7128']:
-                        handle_name = 'glass'
-                    else:
-                        handle_name = 'door'
-
-                elif obj_type == 'dishwasher':
-                    handle_name = 'door'
-
-                geom = self.extract_geometry(root, handle_name)
-                params = self.extract_params(geom)
-                gk_obj = ArticulatedObject(class_ids[obj_type], geom, params, '', base_xyz, base_quat)
+                # Useful for baseline
+                gk_obj = self.create_articulated_object(obj_type, o_id, root, base_xyz, base_quat)
 
                 # take images
                 grp = h5File.create_group("obj_" + str(i).zfill(6))
-                res = self.take_images(fname, o_id, grp, gk_obj, handle_name, use_force=False)
+                res = self.take_images(fname, o_id, grp, gk_obj, use_force=False)
                 if not res:
                     del h5File["obj_" + str(i).zfill(6)]
                 else:
@@ -133,21 +121,12 @@ class SceneGeneratorSapien():
         sim = MjSim(model)
         modder = TextureModder(sim)
 
-        act_idx = 0
-        if obj_idx in ['7349', '7366']:
-            act_idx = 1
-        if obj_idx in ['11826', '12065']:
-            act_idx = 2
-        if obj_idx in ['12428']:
-            act_idx = 4
+        act_idx = gk_obj.act_idx
+        joint_name = gk_obj.joint_name
+        handle_name = gk_obj.handle_name
 
         n_qpos_variables = 1
         sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
-
-        joint_name = 'joint_{}'.format(act_idx)
-        if obj_idx in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', \
-                '12606', '12614', ]:
-            joint_name = 'joint_1'
 
         ''' GK baseline'''
         embedding = np.append(gk_obj.type, gk_obj.geom.reshape(-1))
@@ -242,15 +221,80 @@ class SceneGeneratorSapien():
 
         return True
 
+    def create_articulated_object(self, obj_type, o_id, scene_xml_root, base_xyz, base_quat):
+        # For Generalizing Kinematics Baseline
+        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11}
+        handle_name = 'door'
+
+        if obj_type == 'microwave':
+            if o_id in ['7119', '7167', '7263', '7310']:
+                handle_name = 'handle'
+            elif o_id in ['7265', '7349', '7128']:
+                handle_name = 'glass'
+
+        act_idx = 0
+        if o_id in ['7349', '7366']:
+            act_idx = 1
+        if o_id in ['11826', '12065']:
+            act_idx = 2
+        if o_id in ['12428']:
+            act_idx = 4
+
+        joint_name = 'joint_{}'.format(act_idx)
+        if o_id in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', '12606', '12614']:
+            joint_name = 'joint_1'
+
+        geom = self.extract_geometry(scene_xml_root, handle_name)
+        params = self.extract_params(scene_xml_root, joint_name, obj_type, geom)
+        gk_obj = ArticulatedObjectSapien(class_ids[obj_type], geom, params, '', base_xyz, base_quat, handle_name,
+                                         joint_name, act_idx)
+        return gk_obj
+
     def extract_geometry(self, xml_root, handle_name='handle'):
+        dims=None
         for geom in xml_root.iter('geom'):
             if 'name' in geom.attrib.keys() and geom.attrib['name'] == handle_name:
                 dims = [2 * abs(float(x)) for x in geom.attrib['pos'].split(' ')]
         left = True
         thicc = 0.01
+
+        if dims is None:
+            raise ValueError("object geometry dims not defined")
+
         geometry = np.array([dims[0], dims[1], thicc, left])  # length = 4
         return geometry
 
-    def extract_params(self, geom):
-        params = np.array([[-geom[0], -geom[1], -geom[2]], [geom[0], geom[1], geom[2]]])  # length = 6
+    def extract_params(self, xml_root, jnt_name, obj_type, geom):
+        jnt_in_base = None
+        radii = None
+
+        # Axis point in local frame
+        for body in xml_root.iter('body'):
+            for jnt in body.iter('joint'):
+                if 'name' in jnt.attrib.keys() and jnt.attrib['name'] == jnt_name:
+                    jnt_pos_in_body = [float(x) for x in jnt.attrib['pos'].split(' ')]
+                else:
+                    continue
+
+                body_pos_in_base = [float(x) for x in body.attrib['pos'].split(' ')]
+                body_quat_in_base = [float(x) for x in body.attrib['quat'].split(' ')]
+                body_rot_matrix = tf3d.quaternions.quat2mat(body_quat_in_base)
+                body_transform_in_base = tf3d.affines.compose(body_pos_in_base, body_rot_matrix, np.ones(3))
+
+                jnt_pos_in_body = np.concatenate((jnt_pos_in_body, 1.0))
+                jnt_in_base = (np.matmul(body_transform_in_base, jnt_pos_in_body))[:3]
+
+        # Range of motion
+        if obj_type == ['drawer']:
+            radii = [-geom[0], 0., 0.]
+        elif obj_type == ['microwave']:
+            radii = [0., geom[1], 0.]  # For left objects
+        elif obj_type == ['dishwasher']:
+            radii = [0., 0., geom[2]]
+
+        if jnt_in_base is None or radii is None:
+            raise ValueError('Object parameters not defined')
+
+        params = np.array([[jnt_in_base[0], jnt_in_base[1], jnt_in_base[2]],
+                           [radii[0], radii[1], radii[2]]])  # length = 6
         return params
