@@ -261,7 +261,7 @@ class SceneGeneratorSapien():
         if dims is None:
             raise ValueError("object geometry dims not defined")
 
-        geometry = np.array([dims[0], dims[1], thicc, left])  # length = 4
+        geometry = np.array([dims[0], dims[1], dims[2], left])  # length = 4
         return geometry
 
     def extract_params(self, xml_root, jnt_name, obj_type, geom):
