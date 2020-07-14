@@ -105,12 +105,7 @@ class SceneGeneratorSapien():
                         handle_name = 'door'
 
                 elif obj_type == 'dishwasher':
-                    if o_id in ['12349', '12558', '12560']:
-                        handle_name = 'door_frame'
-                    elif o_id in ['12594']:
-                        handle_name = 'control_button'
-                    else:
-                        handle_name = 'door'
+                    handle_name = 'door'
 
                 geom = self.extract_geometry(root, handle_name)
                 params = self.extract_params(geom)
@@ -146,7 +141,8 @@ class SceneGeneratorSapien():
         sim.data.ctrl[act_idx] = 0.1  # + 0.5 * np.random.randn()   # Random variation
 
         joint_name = 'joint_{}'.format(act_idx)
-        if obj_idx in ['7304']:
+        if obj_idx in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', \
+                '12606', '12614', ]:
             joint_name = 'joint_1'
 
         ''' GK baseline'''
