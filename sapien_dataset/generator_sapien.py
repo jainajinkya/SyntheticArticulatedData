@@ -243,7 +243,7 @@ class SceneGeneratorSapien():
         joint_name = 'joint_{}'.format(act_idx)
         if o_id in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', '12606', '12614']:
             joint_name = 'joint_1'
-
+        
         geom = self.extract_geometry(scene_xml_root, handle_name)
         params = self.extract_params(scene_xml_root, joint_name, obj_type, geom)
         gk_obj = ArticulatedObjectSapien(class_ids[obj_type], geom, params, '', base_xyz, base_quat, handle_name,
@@ -281,15 +281,15 @@ class SceneGeneratorSapien():
                 body_rot_matrix = tf3d.quaternions.quat2mat(body_quat_in_base)
                 body_transform_in_base = tf3d.affines.compose(body_pos_in_base, body_rot_matrix, np.ones(3))
 
-                jnt_pos_in_body = np.concatenate((jnt_pos_in_body, 1.0))
+                jnt_pos_in_body = np.concatenate((jnt_pos_in_body, [1.0]))
                 jnt_in_base = (np.matmul(body_transform_in_base, jnt_pos_in_body))[:3]
 
         # Range of motion
-        if obj_type == ['drawer']:
+        if obj_type in ['drawer']:
             radii = [-geom[0], 0., 0.]
-        elif obj_type == ['microwave']:
+        elif obj_type in ['microwave']:
             radii = [0., geom[1], 0.]  # For left objects
-        elif obj_type == ['dishwasher']:
+        elif obj_type in ['dishwasher']:
             radii = [0., 0., geom[2]]
 
         if jnt_in_base is None or radii is None:
