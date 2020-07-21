@@ -86,6 +86,9 @@ def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
     elif obj_type == 'dishwasher':
         geom_names = ['door', 'display_panel', 'surface', 'frame', 'shelf', 'handle']
         restricted = ['button', 'leaf']
+    elif obj_type == 'oven':
+        geom_names = ['door', 'door_frame', 'tray', 'handle', 'glass']
+        restricted = ['button', 'knob']
 
     # # find the name in the urdf file
     visElemList = {}
