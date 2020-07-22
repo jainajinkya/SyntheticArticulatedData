@@ -27,8 +27,8 @@ def main(args):
         test_obj_idxs = ['12605', '12606', '12614', '12617', '12621', '11826', '12065', '12596', '12597']
 
     elif args.obj == 'oven':
-        train_obj_idxs = ['7120', '7179', '7187', '7201', '7220', '7290']
-        test_obj_idxs = ['7332', '102018', '101917']
+        train_obj_idxs = ['7179', '7187', '7201', '7220', '7290', '101917']
+        test_obj_idxs = ['7120', '7332', '102018']
 
     # initialize Generator
     scenegen = SceneGeneratorSapien(obj_idxs=train_obj_idxs,
