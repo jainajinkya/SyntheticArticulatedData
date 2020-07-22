@@ -13,20 +13,24 @@ from shapely.geometry import MultiPoint
 
 def make_mesh_watertight(file_in, file_out):
     mesh = trimesh.load_mesh(file_in)
-    bnds = np.array(mesh.bounding_box.extents)
-    bad_cols = np.nonzero(bnds < 1e-6)
-    if bad_cols[0].size > 0:
-        try:
-            mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
-                                                           mesh.faces, height=0.001)
-            mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='QbB Pp Qt Qw')
-        except IndexError:
-            poly = MultiPoint(np.delete(mesh.vertices, bad_cols, axis=1)).convex_hull
-            mesh2 = trimesh.creation.extrude_polygon(poly, height=0.001)
-    else:
-        mesh2 = copy.copy(mesh)
-    with open(file_out, 'wb') as f:
-        trimesh.exchange.export.export_mesh(mesh2, file_obj=f, file_type='stl')
+    # print("Is Mesh convex? {}".format(trimesh.convex.is_convex(mesh)))
+    if not trimesh.convex.is_convex(mesh):
+        bnds = np.array(mesh.bounding_box.extents)
+        bad_cols = np.nonzero(bnds < 1e-6)
+        if bad_cols[0].size > 0:
+            try:
+                mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
+                                                               mesh.faces, height=0.001)
+                mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='Pp Qt Qw Qbb Qu Qg')
+            except IndexError:
+                poly = MultiPoint(np.delete(mesh.vertices, bad_cols, axis=1)).convex_hull
+                mesh2 = trimesh.creation.extrude_polygon(poly, height=0.001)
+        else:
+            mesh2 = trimesh.convex.convex_hull(mesh.vertices, qhull_options='QbB Pp Qt Qw')
+
+        print("Is corrected mesh convex? {}".format(trimesh.convex.is_convex(mesh2)))
+        with open(file_out, 'wb') as f:
+            trimesh.exchange.export.export_mesh(mesh2, file_obj=f, file_type='stl')
 
 
 def make_mesh_watertight_obj(file_in, file_out):
