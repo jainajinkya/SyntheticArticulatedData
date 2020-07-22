@@ -223,20 +223,21 @@ class SceneGeneratorSapien():
 
     def create_articulated_object(self, obj_type, o_id, scene_xml_root, base_xyz, base_quat):
         # For Generalizing Kinematics Baseline
-        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11}
-        handle_name = 'door'
+        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11, 'oven': 12}
 
-        if obj_type == 'microwave':
-            if o_id in ['7119', '7167', '7263', '7310']:
-                handle_name = 'handle'
-            elif o_id in ['7265', '7349', '7128']:
-                handle_name = 'glass'
+        handle_name = 'door'
+        if o_id in ['7119', '7167', '7263', '7310']:
+            handle_name = 'handle'
+        elif o_id in ['7265', '7349', '7128']:
+            handle_name = 'glass'
 
         act_idx = 0
-        if o_id in ['7349', '7366']:
+        if o_id in ['7349', '7366', '7120', ]:
             act_idx = 1
         if o_id in ['11826', '12065']:
             act_idx = 2
+        if o_id in ['7179', '7201', '7332']:
+            act_idx = 3
         if o_id in ['12428']:
             act_idx = 4
 
