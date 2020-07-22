@@ -290,7 +290,7 @@ class SceneGeneratorSapien():
             radii = [-geom[0], 0., 0.]
         elif obj_type in ['microwave']:
             radii = [0., geom[1], 0.]  # For left objects
-        elif obj_type in ['dishwasher']:
+        elif obj_type in ['dishwasher', 'oven']:
             radii = [0., 0., geom[2]]
 
         if jnt_in_base is None or radii is None:
