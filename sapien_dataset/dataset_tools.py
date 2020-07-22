@@ -28,9 +28,12 @@ def make_mesh_watertight(file_in, file_out):
         else:
             mesh2 = trimesh.convex.convex_hull(mesh.vertices, qhull_options='QbB Pp Qt Qw')
 
-        print("Is corrected mesh convex? {}".format(trimesh.convex.is_convex(mesh2)))
-        with open(file_out, 'wb') as f:
-            trimesh.exchange.export.export_mesh(mesh2, file_obj=f, file_type='stl')
+        if trimesh.convex.is_convex(mesh2):  # Succeeded ?
+            with open(file_out, 'wb') as f:
+                trimesh.exchange.export.export_mesh(mesh2, file_obj=f, file_type='stl')
+        else:
+            return False
+    return True
 
 
 def make_mesh_watertight_obj(file_in, file_out):
@@ -309,8 +312,9 @@ if __name__ == "__main__":
             mesh_in = os.path.abspath(mesh_in)
             mesh_out = os.path.abspath(mesh_out)
             try:
-                make_mesh_watertight(mesh_in, mesh_out)
-                # print("Watertight meshes created for mesh:{} and saved in:{}".format(mesh_in, mesh_out))
+                res = make_mesh_watertight(mesh_in, mesh_out)
+                if not res:
+                    print(">>>>>>>>>> Failed to correct mesh:{}".format(mesh_in))
             except:
                 print(">>>>>>>>>> Failed to correct mesh:{}".format(mesh_in))
 
