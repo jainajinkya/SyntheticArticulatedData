@@ -10,7 +10,7 @@ done
 
 # Correct mesh if needed
 for filename in ${DATADIR}textured_objs/*.stl; do
-  python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "$filename" --correct-mesh
+  python ${CUR_DIR}/sapien_dataset/dataset_tools.py -i "$filename" --correct-mesh > obj2res.txt;
 done
 
 # Change mesh file names in the urdf
