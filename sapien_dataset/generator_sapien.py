@@ -232,7 +232,7 @@ class SceneGeneratorSapien():
             handle_name = 'glass'
 
         act_idx = 0
-        if o_id in ['7349', '7366', '7120', ]:
+        if o_id in ['7349', '7366', '7120', '7187']:
             act_idx = 1
         if o_id in ['11826', '12065']:
             act_idx = 2
