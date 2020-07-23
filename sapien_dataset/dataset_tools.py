@@ -97,8 +97,8 @@ def copy_mesh_name_tags(urdf_root, xml_root, obj_type):
     elif obj_type == 'oven':
         geom_names = ['door', 'door_frame', 'tray', 'handle', 'glass']
         restricted = ['button', 'knob']
-    elif obj_type == 'drawer':
-        geom_names = ['cabinet_door', 'drawer', 'handle', 'base', 'frame', 'panel']
+    elif obj_type in ['drawer', 'drawer2' ]:
+        geom_names = ['cabinet_door', 'drawer', 'handle', 'base', 'frame', 'panel', 'shelf']
         restricted = ['button', 'leaf']
 
 
