@@ -223,8 +223,9 @@ class SceneGeneratorSapien():
 
     def create_articulated_object(self, obj_type, o_id, scene_xml_root, base_xyz, base_quat):
         # For Generalizing Kinematics Baseline
-        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11, 'oven': 12}
+        class_ids = {'microwave': 0, 'drawer': 1, 'dishwasher': 11, 'oven': 12, 'drawer2': 13}
 
+        # Handle names
         handle_name = 'door'
         if o_id in ['7119', '7167', '7263', '7310']:
             handle_name = 'handle'
@@ -233,14 +234,23 @@ class SceneGeneratorSapien():
         elif o_id in ['7187']:
             handle_name = 'door_frame'
 
+        if obj_type in ['drawer', 'drawer2']:
+            handle_name = 'drawer'
+            if o_id in ['45620']:
+                handle_name = 'shelf'
+            elif o_id in ['45261']:
+                handle_name = 'handle'
+
+        # Actuator ids
         act_idx = 0
-        if o_id in ['7349', '7366', '7120', '7187']:
+        if o_id in ['7349', '7366', '7120', '7187', '45162', '45235', '45676', '45661', '40147', '41510', '44826',
+                    '45687', '45689']:
             act_idx = 1
-        if o_id in ['11826', '12065']:
+        if o_id in ['11826', '12065', '45622', '45632', '40417', '41083', '45219', '45238', '45332', '45636']:
             act_idx = 2
         if o_id in ['7179', '7201', '7332']:
             act_idx = 3
-        if o_id in ['12428']:
+        if o_id in ['12428', '45612']:
             act_idx = 4
 
         joint_name = 'joint_{}'.format(act_idx)
