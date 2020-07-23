@@ -21,7 +21,8 @@ def make_mesh_watertight(file_in, file_out):
             try:
                 mesh2 = trimesh.creation.extrude_triangulation(np.delete(mesh.vertices, bad_cols, axis=1),
                                                                mesh.faces, height=0.001)
-                mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='Pp Qt Qw Qbb Qu Qg')
+                # mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='Pp Qt Qw Qbb Qu Qg')
+                mesh2 = trimesh.convex.convex_hull(mesh2.vertices, qhull_options='QbB Pp Qt Qw')
             except IndexError:
                 poly = MultiPoint(np.delete(mesh.vertices, bad_cols, axis=1)).convex_hull
                 mesh2 = trimesh.creation.extrude_polygon(poly, height=0.001)
