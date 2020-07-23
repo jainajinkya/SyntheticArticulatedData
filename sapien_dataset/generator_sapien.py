@@ -254,7 +254,7 @@ class SceneGeneratorSapien():
             act_idx = 4
 
         joint_name = 'joint_{}'.format(act_idx)
-        if o_id in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', '12606', '12614']:
+        if o_id in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', '12606', '12614', '45746']:
             joint_name = 'joint_1'
         
         geom = self.extract_geometry(scene_xml_root, handle_name, obj_type)
