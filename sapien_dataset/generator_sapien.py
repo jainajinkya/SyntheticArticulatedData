@@ -230,6 +230,8 @@ class SceneGeneratorSapien():
             handle_name = 'handle'
         elif o_id in ['7265', '7349', '7128']:
             handle_name = 'glass'
+        elif o_id in ['7187']:
+            handle_name = 'door_frame'
 
         act_idx = 0
         if o_id in ['7349', '7366', '7120', '7187']:
