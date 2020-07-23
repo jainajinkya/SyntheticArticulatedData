@@ -257,22 +257,32 @@ class SceneGeneratorSapien():
         if o_id in ['7304', '12480', '12530', '12565', '12579', '12583', '12592', '12594', '12606', '12614']:
             joint_name = 'joint_1'
         
-        geom = self.extract_geometry(scene_xml_root, handle_name)
+        geom = self.extract_geometry(scene_xml_root, handle_name, obj_type)
         params = self.extract_params(scene_xml_root, joint_name, obj_type, geom)
         gk_obj = ArticulatedObjectSapien(class_ids[obj_type], geom, params, '', base_xyz, base_quat, handle_name,
                                          joint_name, act_idx)
         return gk_obj
 
-    def extract_geometry(self, xml_root, handle_name='handle'):
-        dims=None
-        for geom in xml_root.iter('geom'):
-            if 'name' in geom.attrib.keys() and geom.attrib['name'] == handle_name:
-                dims = [2 * abs(float(x)) for x in geom.attrib['pos'].split(' ')]
-        left = True
-        thicc = 0.01
+    def extract_geometry(self, xml_root, handle_name='handle', obj_type='microwave'):
+        dims = None
+        left = None
+
+        if obj_type in ['drawer', 'drawer2']:
+            dims = [0.5, 1., 0.5]
+        else:
+            for geom in xml_root.iter('geom'):
+                if 'name' in geom.attrib.keys() and geom.attrib['name'] == handle_name:
+                    dims = [2 * abs(float(x)) for x in geom.attrib['pos'].split(' ')]
+
+        if obj_type in ['drawer', 'drawer2']:
+            left = 0
+        elif obj_type in ['microwave', 'oven', 'dishwasher']:
+            left = 1
 
         if dims is None:
             raise ValueError("object geometry dims not defined")
+        if left is None:
+            raise ValueError("object movement handedness (right/left) not defined")
 
         geometry = np.array([dims[0], dims[1], dims[2], left])  # length = 4
         return geometry
@@ -280,12 +290,17 @@ class SceneGeneratorSapien():
     def extract_params(self, xml_root, jnt_name, obj_type, geom):
         jnt_in_base = None
         radii = None
+        jnt_range = None
 
         # Axis point in local frame
         for body in xml_root.iter('body'):
             for jnt in body.iter('joint'):
                 if 'name' in jnt.attrib.keys() and jnt.attrib['name'] == jnt_name:
-                    jnt_pos_in_body = [float(x) for x in jnt.attrib['pos'].split(' ')]
+                    if 'pos' in jnt.attrib.keys():
+                        jnt_pos_in_body = [float(x) for x in jnt.attrib['pos'].split(' ')]
+                    else:
+                        jnt_pos_in_body = [0., 0., 0.]
+                    jnt_range = np.array([float(x) for x in jnt.attrib['range'].split(' ')])
                 else:
                     continue
 
@@ -298,8 +313,8 @@ class SceneGeneratorSapien():
                 jnt_in_base = (np.matmul(body_transform_in_base, jnt_pos_in_body))[:3]
 
         # Range of motion
-        if obj_type in ['drawer']:
-            radii = [-geom[0], 0., 0.]
+        if obj_type in ['drawer', 'drawer2']:
+            radii = [-np.max(np.abs(jnt_range)), 0., 0.]
         elif obj_type in ['microwave']:
             radii = [0., geom[1], 0.]  # For left objects
         elif obj_type in ['dishwasher', 'oven']:
