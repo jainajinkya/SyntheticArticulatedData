@@ -28,12 +28,16 @@ def combine_datasets(files_in, file_out):
     print("Combined datasets in file {}".format(file_out))
 
 
-def subsample_dataset(file_in, sub_size, file_out):
+def subsample_dataset(file_in, sub_size, file_out, choose_random=False):
     orig_data = h5py.File(file_in, 'r')
     if sub_size > len(orig_data.keys()):
         return orig_data
     else:
-        ids = np.random.choice(len(orig_data.keys()), size=sub_size)
+        if choose_random:
+            ids = np.random.choice(len(orig_data.keys()), size=sub_size)
+        else:
+            ids = np.arange(0, sub_size)
+
         sub_dataset = h5py.File(file_out, 'w')
         original_keys = list(orig_data.keys())
         for i, id in enumerate(ids):
@@ -109,6 +113,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-sub', '--subsample', action='store_true', default=False, help='Randomly subsample dataset')
     parser.add_argument('-ns', '--sub_size', type=int, default=0, help='New size of subsampled dataset')
+    parser.add_argument('--random', action='store_true', default=False, help='Should choose samples randomly?')
 
     parser.add_argument('--shuffle', action='store_true', default=False, help='Shuffle Dataset?')
 
@@ -123,7 +128,8 @@ if __name__ == "__main__":
     if args.combine:
         combine_datasets(files_in=args.files_in, file_out=args.file_out)
     elif args.subsample:
-        subsample_dataset(file_in=args.files_in[0], sub_size=args.sub_size, file_out=args.file_out)
+        subsample_dataset(file_in=args.files_in[0], sub_size=args.sub_size, file_out=args.file_out,
+                          choose_random=args.random)
     elif args.shuffle:
         shuffle_dataset(file_in=args.files_in[0], file_out=args.file_out)
     elif args.debug_dataset:
