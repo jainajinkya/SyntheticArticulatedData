@@ -9,7 +9,7 @@ import torch
 import transforms3d as tf3d
 from SyntheticArticulatedData.generation import calibrations
 from SyntheticArticulatedData.generation.utils import sample_pose_sapien, get_cam_relative_params2, \
-    sample_pose_sapien_dishwasher, change_frames
+    sample_pose_sapien_dishwasher,  sample_pose_sapien_drawer, change_frames
 from SyntheticArticulatedData.sapien_dataset.ArticulatedObjsSapien import ArticulatedObjectSapien
 from mujoco_py import load_model_from_path, MjSim
 from mujoco_py.modder import TextureModder
@@ -87,6 +87,9 @@ class SceneGeneratorSapien():
 
                 if obj_type == 'dishwasher':
                     base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_sapien_dishwasher()
+
+                if obj_type in ['drawer', 'drawer2']:
+                    base_xyz, base_angle_x, base_angle_y, base_angle_z = sample_pose_sapien_drawer()
 
                 base_quat = tf3d.euler.euler2quat(base_angle_x, base_angle_y, base_angle_z, axes='sxyz')  # wxyz
                 # print("Sampled base pose:{}  {}".format(base_xyz, base_quat))

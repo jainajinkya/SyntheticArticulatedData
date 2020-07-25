@@ -172,6 +172,13 @@ def sample_pose_sapien():
     return tuple(xyz), angle_x, angle_y, angle_z
 
 
+def sample_pose_sapien_drawer():
+    xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.25, -0.5, -0.7]), torch.tensor([2.25, 0.5, 0.3]))).numpy()
+    angle_x = pyro.sample('angle_x', dist.Uniform(-np.pi / 4, np.pi / 4)).item()
+    angle_y = pyro.sample('angle_y', dist.Uniform(-np.pi / 4, np.pi / 4)).item()
+    angle_z = pyro.sample('angle_z', dist.Uniform(-1 / 4 * 3.14, 1 / 4 * 3.14)).item()
+    return tuple(xyz), angle_x, angle_y, angle_z
+
 def sample_pose_sapien_dishwasher():
     xyz = pyro.sample('origin', dist.Uniform(torch.tensor([1.75, -1.0, -0.7]), torch.tensor([2.75, 1.0, 0.3]))).numpy()
     angle_x = pyro.sample('angle_x', dist.Uniform(-np.pi / 4, np.pi / 4)).item()
